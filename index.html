@@ -1,0 +1,1685 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SKINDROP PRO // CS2 & Dota 2 Telegram Marketplace & Battles</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0d13;
+      --bg-surface: #121520;
+      --card-bg: rgba(20, 24, 38, 0.78);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --gold: #ffd700;
+      --gold-glow: rgba(255, 215, 0, 0.4);
+      --covert: #eb4b4b;
+      --covert-glow: rgba(235, 75, 75, 0.45);
+      --classified: #d32ce6;
+      --restricted: #8847ff;
+      --mil-spec: #4b69ff;
+      --accent: #ff5722;
+      --accent-glow: rgba(255, 87, 34, 0.4);
+      --green: #00ff88;
+      --text: #f3f5f9;
+      --text-muted: #838eab;
+      --ton-blue: #0098ea;
+      --font-display: 'Chakra Petch', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      padding-bottom: 95px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient dynamic glow */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(circle at 15% 10%, rgba(255, 87, 34, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 30%, rgba(211, 44, 230, 0.1) 0%, transparent 45%),
+        radial-gradient(circle at 50% 90%, rgba(0, 255, 136, 0.08) 0%, transparent 50%),
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 100% 100%, 28px 28px, 28px 28px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 12px 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Live Drops Feed */
+    .live-feed-wrap {
+      background: rgba(14, 17, 27, 0.85);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 90;
+    }
+
+    .live-feed-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-family: var(--font-display);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--green);
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
+
+    .live-pulse {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.4; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.3); }
+      100% { opacity: 0.4; transform: scale(0.9); }
+    }
+
+    .live-items-track {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding: 2px 0;
+      white-space: nowrap;
+    }
+    .live-items-track::-webkit-scrollbar { display: none; }
+
+    .live-item {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 3px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .live-item:hover { border-color: var(--gold); }
+    .live-item.gold { border-color: var(--gold); background: rgba(255, 215, 0, 0.1); }
+    .live-item.covert { border-color: var(--covert); background: rgba(235, 75, 75, 0.1); }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 12px 0 14px 0;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-logo-glow {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, var(--accent), #ff2a6d);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 18px var(--accent-glow);
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      background: linear-gradient(90deg, #fff, #ff7e54);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-badge {
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--gold);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .header-user-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .balance-badge {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+    }
+    .balance-badge:hover { border-color: var(--green); }
+
+    .btn-sound-toggle {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    /* Primary Navigation Bar (Market / Cases / Inventory / Contracts) */
+    .primary-nav {
+      display: flex;
+      background: rgba(14, 18, 28, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(12px);
+    }
+
+    .p-nav-btn {
+      flex: 1;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 9px 4px;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      transition: all 0.2s;
+    }
+
+    .p-nav-btn.active {
+      background: linear-gradient(135deg, rgba(255, 87, 34, 0.25), rgba(211, 44, 230, 0.2));
+      border: 1px solid rgba(255, 87, 34, 0.4);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(255, 87, 34, 0.25);
+    }
+
+    /* Views */
+    .view-content { display: none; animation: fadeIn 0.25s ease-out; }
+    .view-content.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* SEARCH & FILTER BAR */
+    .search-filter-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .search-box {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 10px 14px 10px 38px;
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-input:focus { border-color: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .currency-pill-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 0 12px;
+      font-size: 12px;
+      font-weight: 800;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .tags-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 16px;
+      scrollbar-width: none;
+    }
+    .tags-row::-webkit-scrollbar { display: none; }
+
+    .tag-btn {
+      white-space: nowrap;
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tag-btn.active, .tag-btn:hover {
+      background: rgba(255, 87, 34, 0.15);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* GRID OF SKINS */
+    .skins-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .skin-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .skin-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255, 255, 255, 0.25);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Rarity top line & glow */
+    .skin-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .rarity-knife::before { background: var(--gold); box-shadow: 0 0 12px var(--gold); }
+    .rarity-covert::before { background: var(--covert); box-shadow: 0 0 10px var(--covert); }
+    .rarity-classified::before { background: var(--classified); box-shadow: 0 0 10px var(--classified); }
+    .rarity-restricted::before { background: var(--restricted); }
+    .rarity-mil-spec::before { background: var(--mil-spec); }
+
+    .skin-card.rarity-knife { border-color: rgba(255, 215, 0, 0.25); }
+    .skin-card.rarity-covert { border-color: rgba(235, 75, 75, 0.25); }
+
+    .skin-img-box {
+      height: 105px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin-bottom: 8px;
+    }
+
+    .skin-img {
+      max-width: 90%;
+      max-height: 95px;
+      object-fit: contain;
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,0.6));
+      transition: transform 0.25s;
+    }
+
+    .skin-card:hover .skin-img {
+      transform: scale(1.08) rotate(-2deg);
+    }
+
+    .float-mini-tag {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--green);
+      background: rgba(0, 0, 0, 0.6);
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 255, 136, 0.2);
+    }
+
+    .skin-name {
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .skin-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .skin-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      padding-top: 4px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .skin-price {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .btn-card-action {
+      background: linear-gradient(135deg, var(--accent), #ff2a6d);
+      border: none;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .btn-card-action:active { transform: scale(0.93); }
+
+    /* ===================================================
+       CASES VIEW
+       =================================================== */
+    .cases-hero-banner {
+      background: linear-gradient(135deg, rgba(235, 75, 75, 0.25), rgba(211, 44, 230, 0.2)), var(--card-bg);
+      border: 1px solid rgba(235, 75, 75, 0.35);
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(12px);
+    }
+
+    .cases-hero-title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .cases-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .case-box-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 16px 12px;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .case-box-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--gold);
+      box-shadow: 0 10px 25px rgba(255, 215, 0, 0.15);
+    }
+
+    .case-icon-anim {
+      font-size: 46px;
+      margin: 8px 0;
+      display: inline-block;
+      animation: floatCase 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatCase {
+      from { transform: translateY(0); }
+      to { transform: translateY(-6px) scale(1.04); }
+    }
+
+    .case-title {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .case-chance {
+      font-size: 10px;
+      color: var(--gold);
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .btn-open-case {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent), #ff0055);
+      border: none;
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 800;
+      padding: 9px;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px var(--accent-glow);
+    }
+
+    /* ===================================================
+       INVENTORY VIEW
+       =================================================== */
+    .trade-url-card {
+      background: rgba(0, 255, 136, 0.05);
+      border: 1px solid rgba(0, 255, 136, 0.25);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+
+    .trade-input-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .trade-input {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 8px 12px;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      outline: none;
+    }
+
+    .btn-save-trade {
+      background: var(--green);
+      color: #000;
+      font-weight: 800;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    /* ===================================================
+       CONTRACTS (TRADE-UP) VIEW
+       =================================================== */
+    .contract-station {
+      background: var(--card-bg);
+      border: 1px solid rgba(211, 44, 230, 0.3);
+      border-radius: 20px;
+      padding: 18px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .contract-slots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 16px 0;
+    }
+
+    .contract-slot {
+      width: 55px;
+      height: 55px;
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .contract-slot.filled {
+      border-style: solid;
+      border-color: var(--classified);
+      background: rgba(211, 44, 230, 0.15);
+    }
+
+    /* ===================================================
+       ROULETTE MODAL SCREEN (CS:GO CAROUSEL)
+       =================================================== */
+    .roulette-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 8, 14, 0.95);
+      backdrop-filter: blur(16px);
+      z-index: 300;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .roulette-box {
+      width: 100%;
+      max-width: 440px;
+      background: #111420;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .roulette-viewport {
+      width: 100%;
+      height: 120px;
+      background: #090a10;
+      border-radius: 14px;
+      border: 2px solid var(--accent);
+      margin: 18px 0;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+    }
+
+    .roulette-pointer {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      background: var(--gold);
+      box-shadow: 0 0 15px var(--gold);
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    .roulette-pointer::before {
+      content: '▼';
+      position: absolute;
+      top: -2px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--gold);
+      font-size: 12px;
+    }
+
+    .roulette-ribbon {
+      display: flex;
+      height: 100%;
+      align-items: center;
+      position: absolute;
+      left: 0;
+      top: 0;
+      will-change: transform;
+    }
+
+    .roulette-slot {
+      width: 100px;
+      height: 100px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.03);
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 6px;
+      position: relative;
+    }
+
+    .roulette-slot.won-active {
+      background: rgba(255, 215, 0, 0.2);
+      border: 2px solid var(--gold);
+    }
+
+    .roulette-slot-img {
+      max-width: 60px;
+      max-height: 50px;
+      object-fit: contain;
+      margin-bottom: 4px;
+    }
+
+    .roulette-slot-name {
+      font-size: 9px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 90px;
+    }
+
+    .win-display-area {
+      min-height: 75px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .win-skin-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--gold);
+      margin-bottom: 4px;
+    }
+
+    .win-skin-price {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--green);
+    }
+
+    /* Float / Item Details Modal */
+    .item-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(12px);
+      z-index: 310;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .item-sheet {
+      background: #121624;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 26px 26px 0 0;
+      width: 100%;
+      max-width: 480px;
+      padding: 22px;
+      max-height: 85vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .wear-bar-wrap {
+      margin: 16px 0;
+    }
+
+    .wear-track {
+      height: 8px;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #4b69ff 0%, #8847ff 25%, #d32ce6 50%, #eb4b4b 75%, #ffd700 100%);
+      position: relative;
+      margin: 8px 0;
+    }
+
+    .wear-needle {
+      position: absolute;
+      top: -4px;
+      width: 4px;
+      height: 16px;
+      background: #fff;
+      border-radius: 2px;
+      box-shadow: 0 0 8px #fff;
+    }
+
+    /* Fixed Bottom Action Bar */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-width: 480px;
+      margin: 0 auto;
+      background: rgba(14, 18, 28, 0.94);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 10px 16px;
+      backdrop-filter: blur(16px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .btn-deposit {
+      background: linear-gradient(135deg, var(--green), #059669);
+      color: #000;
+      font-weight: 900;
+      font-size: 13px;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Live Drops Top Ticker -->
+  <div class="live-feed-wrap">
+    <div class="live-feed-badge">
+      <span class="live-pulse"></span> LIVE
+    </div>
+    <div class="live-items-track" id="liveFeedTrack">
+      <!-- Injected live drops -->
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="brand-wrap">
+        <div class="brand-logo-glow">⚔️</div>
+        <div>
+          <div class="brand-title">SKINDROP PRO</div>
+          <div class="brand-badge">CS2 & DOTA 2 MARKETPLACE</div>
+        </div>
+      </div>
+
+      <div class="header-user-actions">
+        <div class="balance-badge" id="userBalanceBtn" onclick="openDepositModal()">
+          <span>💳</span>
+          <span id="headerBalanceText">2,450 ₽</span>
+        </div>
+        <button class="btn-sound-toggle" id="soundBtn" onclick="toggleAudio()" title="Звук">
+          🔊
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Navigation Tabs -->
+    <div class="primary-nav">
+      <button class="p-nav-btn active" onclick="switchNav('market', this)">
+        <span>🛒</span> Маркет
+      </button>
+      <button class="p-nav-btn" onclick="switchNav('cases', this)">
+        <span>📦</span> Кейсы
+      </button>
+      <button class="p-nav-btn" onclick="switchNav('inventory', this)">
+        <span>🎒</span> Инвентарь (<span id="navInvCount">0</span>)
+      </button>
+      <button class="p-nav-btn" onclick="switchNav('contracts', this)">
+        <span>🧪</span> Контракты
+      </button>
+    </div>
+
+    <!-- ==========================================
+         VIEW 1: MARKETPLACE
+         ========================================== -->
+    <div class="view-content active" id="view-market">
+      <div class="search-filter-row">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="marketSearchInput" class="search-input" placeholder="Поиск оружия, скина, ножа...">
+        </div>
+        <button class="currency-pill-btn" id="currencyToggleBtn" onclick="toggleCurrency()">
+          <span>₽ / ⭐</span>
+        </button>
+      </div>
+
+      <div class="tags-row">
+        <button class="tag-btn active" onclick="filterTag('all', this)">⚡ Все скины</button>
+        <button class="tag-btn" onclick="filterTag('knife', this)">🔪 Ножи и Перчатки</button>
+        <button class="tag-btn" onclick="filterTag('rifle', this)">🔫 Винтовки</button>
+        <button class="tag-btn" onclick="filterTag('sniper', this)">🎯 Снайперские</button>
+        <button class="tag-btn" onclick="filterTag('dota', this)">🛡️ Dota 2</button>
+      </div>
+
+      <div class="skins-grid" id="marketGrid"></div>
+    </div>
+
+    <!-- ==========================================
+         VIEW 2: CASES & BATTLES
+         ========================================== -->
+    <div class="view-content" id="view-cases">
+      <div class="cases-hero-banner">
+        <div>
+          <div class="cases-hero-title">🔥 CS2 CASE BATTLES</div>
+          <div style="font-size: 11px; color: var(--text-muted);">Мгновенный вывод в Steam Trade • Шанс ножа до 5%</div>
+        </div>
+        <div style="font-size: 28px;">📦</div>
+      </div>
+
+      <div class="cases-grid" id="casesGrid"></div>
+    </div>
+
+    <!-- ==========================================
+         VIEW 3: INVENTORY
+         ========================================== -->
+    <div class="view-content" id="view-inventory">
+      <!-- Steam Trade-URL Card -->
+      <div class="trade-url-card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:12px; font-weight:800; color:var(--green);">🛡️ STEAM TRADE-LINK ПОДКЛЮЧЕНИЕ</span>
+          <span style="font-size:10px; color:var(--text-muted);">Бот активен</span>
+        </div>
+        <div class="trade-input-row">
+          <input type="text" id="tradeUrlInput" class="trade-input" placeholder="https://steamcommunity.com/tradeoffer/new/?partner=...">
+          <button class="btn-save-trade" onclick="saveTradeUrl()">Сохранить</button>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <span style="font-family:var(--font-display); font-size:13px; font-weight:800;">МОИ ПРЕДМЕТЫ</span>
+        <button onclick="sellAllInventory()" style="background:none; border:none; color:var(--accent); font-size:11px; font-weight:800; cursor:pointer;">
+          💰 Продать всё на баланс
+        </button>
+      </div>
+
+      <div id="inventoryEmptyState" style="text-align:center; padding:40px 10px; color:var(--text-muted);">
+        <div style="font-size:40px; margin-bottom:10px;">🎒</div>
+        <div style="font-size:14px; font-weight:700; color:#fff;">Ваш инвентарь пуст</div>
+        <div style="font-size:11px; margin-top:4px;">Откройте кейс или купите скин в маркете!</div>
+      </div>
+
+      <div class="skins-grid" id="inventoryGrid"></div>
+    </div>
+
+    <!-- ==========================================
+         VIEW 4: CONTRACTS (TRADE-UP)
+         ========================================== -->
+    <div class="view-content" id="view-contracts">
+      <div class="contract-station">
+        <h3 style="font-family:var(--font-display); font-size:16px; margin-bottom:4px;">🧪 КОНТРАКТ ОБМЕНА CS2</h3>
+        <p style="font-size:11px; color:var(--text-muted);">Поместите 3 скина для шанса получить предмет следующей редкости (до x5 окупаемость)!</p>
+
+        <div class="contract-slots">
+          <div class="contract-slot" id="cslot-0" onclick="removeFromContract(0)">+</div>
+          <div class="contract-slot" id="cslot-1" onclick="removeFromContract(1)">+</div>
+          <div class="contract-slot" id="cslot-2" onclick="removeFromContract(2)">+</div>
+        </div>
+
+        <button class="btn-open-case" id="btnSignContract" onclick="signContract()" style="max-width:280px; margin:0 auto;">
+          ✍️ ПОДПИСАТЬ КОНТРАКТ
+        </button>
+      </div>
+
+      <div style="font-size:12px; font-weight:800; color:var(--text-muted); margin-bottom:8px;">
+        ДОСТУПНЫ ДЛЯ КОНТРАКТА ИЗ ВАШЕГО ИНВЕНТАРЯ:
+      </div>
+      <div class="skins-grid" id="contractAvailableGrid"></div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Floating Bar -->
+  <div class="bottom-bar">
+    <div>
+      <div style="font-size:10px; color:var(--text-muted);">STEAM БОТ ВЫВОДА</div>
+      <div style="font-size:12px; font-weight:800; color:var(--green);">● Готов к обмену (0 сек)</div>
+    </div>
+    <button class="btn-deposit" onclick="openDepositModal()">
+      <span>+ Пополнить</span>
+    </button>
+  </div>
+
+  <!-- ==========================================
+       ROULETTE MODAL (CS2 OPENING SIMULATOR)
+       ========================================== -->
+  <div class="roulette-modal" id="rouletteModal">
+    <div class="roulette-box">
+      <button onclick="closeRouletteModal()" style="position:absolute; top:12px; right:14px; background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
+      
+      <h3 style="font-family:var(--font-display); font-size:16px; margin-bottom:2px;" id="rModalCaseTitle">КЕЙС «РЕВОЛЮЦИЯ CS2»</h3>
+      <p style="font-size:11px; color:var(--text-muted);">Испытайте удачу прямо сейчас</p>
+
+      <!-- Track Viewport -->
+      <div class="roulette-viewport">
+        <div class="roulette-pointer"></div>
+        <div class="roulette-ribbon" id="rouletteRibbon">
+          <!-- Slots injected by JS -->
+        </div>
+      </div>
+
+      <!-- Win / Status Area -->
+      <div class="win-display-area">
+        <div id="rIdleText" style="font-size:13px; color:var(--text-muted); font-weight:700;">
+          Нажмите кнопку ниже для запуска!
+        </div>
+        <div id="rWinResult" style="display:none;">
+          <div class="win-skin-title" id="rWonName">Butterfly Knife | Fade</div>
+          <div class="win-skin-price" id="rWonPrice">185,000 ₽</div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:14px;" id="rActionButtons">
+        <button class="btn-open-case" id="btnSpinNow" style="flex:1;" onclick="startRouletteSpin()">
+          🎲 КРУТИТЬ (290 ₽)
+        </button>
+      </div>
+
+      <div style="display:none; gap:8px; margin-top:14px;" id="rWonActions">
+        <button class="btn-card-action" style="flex:1; background:var(--green); color:#000;" onclick="claimWonItemToInventory()">
+          🎒 В инвентарь
+        </button>
+        <button class="btn-card-action" style="flex:1; background:rgba(255,255,255,0.1);" onclick="sellWonItemInstant()">
+          💰 Продать за 90%
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       ITEM 3D / FLOAT WEAR INSPECTOR MODAL
+       ========================================== -->
+  <div class="item-modal" id="itemModal">
+    <div class="item-sheet">
+      <button onclick="closeItemModal()" style="float:right; background:rgba(255,255,255,0.1); border:none; color:#fff; width:30px; height:30px; border-radius:50%; font-size:14px; cursor:pointer;">✕</button>
+      
+      <div style="text-align:center; margin-bottom:14px;">
+        <img id="mInspectImg" src="" style="max-height:130px; object-fit:contain; filter:drop-shadow(0 10px 20px rgba(0,0,0,0.8));">
+        <h3 id="mInspectTitle" style="font-family:var(--font-display); font-size:18px; font-weight:800; margin-top:8px;">AK-47 | Bloodsport</h3>
+        <p id="mInspectRarity" style="font-size:11px; font-weight:700; color:var(--covert);">COVERT RIFLE</p>
+      </div>
+
+      <!-- Float Wear Slider -->
+      <div class="wear-bar-wrap">
+        <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700;">
+          <span>Float Value (Износ):</span>
+          <span id="mInspectFloatVal" style="color:var(--green); font-family:var(--font-mono);">0.08214 (MW)</span>
+        </div>
+        <div class="wear-track">
+          <div class="wear-needle" id="mInspectNeedle" style="left: 8%;"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--text-muted);">
+          <span>FN 0.00</span>
+          <span>MW 0.07</span>
+          <span>FT 0.15</span>
+          <span>WW 0.38</span>
+          <span>BS 1.00</span>
+        </div>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.03); border-radius:12px; padding:12px; font-size:12px; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+          <span style="color:var(--text-muted);">Pattern Template:</span>
+          <span style="font-family:var(--font-mono); font-weight:700;" id="mInspectSeed">#541</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+          <span style="color:var(--text-muted);">Доставка в Steam:</span>
+          <span style="color:var(--green); font-weight:700;">Мгновенно через Trade Bot</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:15px; font-weight:900; margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08);">
+          <span>Цена покупки:</span>
+          <span id="mInspectPrice" style="color:var(--gold); font-family:var(--font-display);">11,500 ₽</span>
+        </div>
+      </div>
+
+      <button class="btn-open-case" id="mInspectBuyBtn" style="padding:14px; font-size:14px;" onclick="buyCurrentInspectedSkin()">
+        ⚡ КУПИТЬ И ПОЛУЧИТЬ В STEAM
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // DATA & STATE
+    // ==========================================
+    let userBalance = 2450;
+    let currency = 'RUB'; // 'RUB' or 'STARS'
+    let soundEnabled = true;
+    let userInventory = [
+      { id: 101, name: "USP-S | Cortex", cat: "pistol", rarity: "rarity-classified", price: 650, float: 0.09, img: "https://images.unsplash.com/photo-1589241062272-c0a000072dfa?auto=format&fit=crop&w=300&q=80" },
+      { id: 102, name: "M4A4 | Evil Daimyo", cat: "rifle", rarity: "rarity-restricted", price: 290, float: 0.18, img: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=300&q=80" }
+    ];
+    let contractSlots = [null, null, null];
+    let activeInspectedSkin = null;
+
+    const skinsDatabase = [
+      { id: 1, name: "Butterfly Knife | Fade", cat: "knife", type: "Knife", rarity: "rarity-knife", priceRub: 185000, stars: 52000, float: 0.012, seed: 781, img: "https://images.unsplash.com/photo-1595590424283-b8f17842773f?auto=format&fit=crop&w=300&q=80" },
+      { id: 2, name: "Karambit | Doppler Phase 2", cat: "knife", type: "Knife", rarity: "rarity-knife", priceRub: 142000, stars: 40000, float: 0.008, seed: 194, img: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=300&q=80" },
+      { id: 3, name: "AK-47 | Bloodsport", cat: "rifle", type: "Rifle", rarity: "rarity-covert", priceRub: 11500, stars: 3200, float: 0.082, seed: 541, img: "https://images.unsplash.com/photo-1589241062272-c0a000072dfa?auto=format&fit=crop&w=300&q=80" },
+      { id: 4, name: "AWP | Printstream", cat: "sniper", type: "Sniper", rarity: "rarity-covert", priceRub: 16800, stars: 4700, float: 0.181, seed: 302, img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80" },
+      { id: 5, name: "M4A1-S | Hyper Beast", cat: "rifle", type: "Rifle", rarity: "rarity-covert", priceRub: 6400, stars: 1800, float: 0.142, seed: 88, img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=300&q=80" },
+      { id: 6, name: "Desert Eagle | Printstream", cat: "pistol", type: "Pistol", rarity: "rarity-classified", priceRub: 4800, stars: 1350, float: 0.065, seed: 440, img: "https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=300&q=80" },
+      { id: 7, name: "Arcana: Manifold Paradox (PA)", cat: "dota", type: "Dota 2", rarity: "rarity-classified", priceRub: 3800, stars: 1050, float: 0.00, seed: 1, img: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=300&q=80" },
+      { id: 8, name: "Arcana: Feast of Abscession (Pudge)", cat: "dota", type: "Dota 2", rarity: "rarity-classified", priceRub: 3450, stars: 980, float: 0.00, seed: 1, img: "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&w=300&q=80" }
+    ];
+
+    const casesData = [
+      { id: 'rev', name: "Кейс «Революция CS2»", price: 290, chance: "Шанс ножа: 1.5%", icon: "📦" },
+      { id: 'knives', name: "Кейс «Только Ножи ★»", price: 1490, chance: "Гарантированный нож!", icon: "🔪" },
+      { id: 'covert', name: "Кейс «Тайное & AWP»", price: 490, chance: "Шанс AWP Азимов: 18%", icon: "🔴" },
+      { id: 'dota', name: "Dota 2 Arcana Vault", price: 390, chance: "Шанс Арканы: 12%", icon: "🛡️" }
+    ];
+
+    // Web Audio Synthesizer for CS2 sounds
+    let audioCtx = null;
+    function playSound(type) {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'tick') {
+          osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.04);
+        } else if (type === 'win') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+          osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+          osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+          osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.3); // C6
+          gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.7);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.7);
+        } else if (type === 'coin') {
+          osc.frequency.setValueAtTime(987.77, audioCtx.currentTime);
+          osc.frequency.setValueAtTime(1318.51, audioCtx.currentTime + 0.08);
+          gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.25);
+        }
+      } catch (e) {
+        // Audio fallback
+      }
+    }
+
+    function toggleAudio() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('soundBtn').innerText = soundEnabled ? '🔊' : '🔇';
+    }
+
+    // ==========================================
+    // INITIALIZATION & LIVE FEED
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+      }
+      renderMarket(skinsDatabase);
+      renderCases();
+      renderInventory();
+      startLiveFeedSimulation();
+      updateBalanceUI();
+    });
+
+    function startLiveFeedSimulation() {
+      const feed = document.getElementById('liveFeedTrack');
+      const sampleDrops = [
+        { name: "Karambit | Fade", cls: "gold", icon: "🔪", price: "145k ₽" },
+        { name: "AWP | Printstream", cls: "covert", icon: "🔴", price: "16.8k ₽" },
+        { name: "Arcana PA", cls: "covert", icon: "🛡️", price: "3.8k ₽" },
+        { name: "AK-47 | Bloodsport", cls: "covert", icon: "🔴", price: "11.5k ₽" },
+        { name: "USP-S | Cortex", cls: "", icon: "🟣", price: "650 ₽" }
+      ];
+
+      function updateFeed() {
+        feed.innerHTML = sampleDrops.map(d => `
+          <div class="live-item ${d.cls}">
+            <span>${d.icon}</span>
+            <span>${d.name}</span>
+            <span style="color:var(--green);">${d.price}</span>
+          </div>
+        `).join('');
+      }
+      updateFeed();
+
+      setInterval(() => {
+        const randomSkin = skinsDatabase[Math.floor(Math.random() * skinsDatabase.length)];
+        sampleDrops.unshift({
+          name: randomSkin.name,
+          cls: randomSkin.rarity.includes('knife') ? 'gold' : 'covert',
+          icon: randomSkin.rarity.includes('knife') ? '🔪' : '🔴',
+          price: `${(randomSkin.priceRub / 1000).toFixed(1)}k ₽`
+        });
+        if (sampleDrops.length > 8) sampleDrops.pop();
+        updateFeed();
+      }, 4000);
+    }
+
+    // ==========================================
+    // RENDER FUNCTIONS
+    // ==========================================
+    function renderMarket(items) {
+      const grid = document.getElementById('marketGrid');
+      grid.innerHTML = items.map(s => {
+        const displayPrice = currency === 'RUB' ? `${s.priceRub.toLocaleString()} ₽` : `${s.stars.toLocaleString()} ⭐`;
+        return `
+          <div class="skin-card ${s.rarity}" onclick="openItemInspector(${s.id})">
+            <div class="skin-img-box">
+              <span class="float-mini-tag">Float ${s.float}</span>
+              <img src="${s.img}" alt="${s.name}" class="skin-img" loading="lazy">
+            </div>
+            <div class="skin-name">${s.name}</div>
+            <div class="skin-sub">
+              <span>${s.type}</span>
+              <span style="color:var(--text-muted);">#${s.seed}</span>
+            </div>
+            <div class="skin-card-footer">
+              <div class="skin-price">${displayPrice}</div>
+              <button class="btn-card-action" onclick="event.stopPropagation(); buySkinDirect(${s.id})">Купить</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderCases() {
+      const grid = document.getElementById('casesGrid');
+      grid.innerHTML = casesData.map(c => `
+        <div class="case-box-card" onclick="openCaseRoulette('${c.id}')">
+          <div class="case-icon-anim">${c.icon}</div>
+          <div class="case-title">${c.name}</div>
+          <div class="case-chance">${c.chance}</div>
+          <button class="btn-open-case">ОТКРЫТЬ (${c.price} ₽)</button>
+        </div>
+      `).join('');
+    }
+
+    function renderInventory() {
+      const grid = document.getElementById('inventoryGrid');
+      const empty = document.getElementById('inventoryEmptyState');
+      document.getElementById('navInvCount').innerText = userInventory.length;
+
+      if (userInventory.length === 0) {
+        grid.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      grid.innerHTML = userInventory.map((item, idx) => `
+        <div class="skin-card ${item.rarity}">
+          <div class="skin-img-box">
+            <span class="float-mini-tag">Float ${item.float}</span>
+            <img src="${item.img}" class="skin-img">
+          </div>
+          <div class="skin-name">${item.name}</div>
+          <div class="skin-sub">
+            <span>Инвентарь</span>
+            <span style="color:var(--green); font-weight:700;">${item.price} ₽</span>
+          </div>
+          <div class="skin-card-footer">
+            <button class="btn-card-action" style="background:var(--green); color:#000; flex:1; margin-right:4px;" onclick="withdrawSkinSteam(${idx})">Вывести</button>
+            <button class="btn-card-action" style="background:rgba(255,255,255,0.1); flex:1;" onclick="sellInventoryItem(${idx})">Продать</button>
+          </div>
+        </div>
+      `).join('');
+
+      renderContractAvailable();
+    }
+
+    function renderContractAvailable() {
+      const grid = document.getElementById('contractAvailableGrid');
+      grid.innerHTML = userInventory.map((item, idx) => `
+        <div class="skin-card ${item.rarity}" onclick="addToContract(${idx})">
+          <div class="skin-img-box">
+            <img src="${item.img}" class="skin-img">
+          </div>
+          <div class="skin-name">${item.name}</div>
+          <div class="skin-card-footer">
+            <span class="skin-price">${item.price} ₽</span>
+            <button class="btn-card-action">+ В контракт</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ==========================================
+    // NAVIGATION & FILTERS
+    // ==========================================
+    function switchNav(viewName, btn) {
+      document.querySelectorAll('.p-nav-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
+      document.getElementById(`view-${viewName}`).classList.add('active');
+      playSound('tick');
+    }
+
+    function filterTag(cat, btn) {
+      document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (cat === 'all') {
+        renderMarket(skinsDatabase);
+      } else {
+        renderMarket(skinsDatabase.filter(s => s.cat === cat));
+      }
+    }
+
+    document.getElementById('marketSearchInput').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      renderMarket(skinsDatabase.filter(s => s.name.toLowerCase().includes(q) || s.type.toLowerCase().includes(q)));
+    });
+
+    function toggleCurrency() {
+      currency = currency === 'RUB' ? 'STARS' : 'RUB';
+      updateBalanceUI();
+      renderMarket(skinsDatabase);
+    }
+
+    function updateBalanceUI() {
+      document.getElementById('headerBalanceText').innerText = currency === 'RUB' ? `${userBalance.toLocaleString()} ₽` : `${Math.round(userBalance / 3.5)} ⭐`;
+    }
+
+    // ==========================================
+    // ACTIONS & STEAM TRADE
+    // ==========================================
+    function openItemInspector(id) {
+      const skin = skinsDatabase.find(s => s.id === id);
+      if (!skin) return;
+      activeInspectedSkin = skin;
+
+      document.getElementById('mInspectImg').src = skin.img;
+      document.getElementById('mInspectTitle').innerText = skin.name;
+      document.getElementById('mInspectRarity').innerText = skin.rarity.toUpperCase();
+      document.getElementById('mInspectFloatVal').innerText = `${skin.float} (FN/MW)`;
+      document.getElementById('mInspectNeedle').style.left = `${skin.float * 100}%`;
+      document.getElementById('mInspectSeed').innerText = `#${skin.seed}`;
+      document.getElementById('mInspectPrice').innerText = `${skin.priceRub.toLocaleString()} ₽ (${skin.stars} ⭐)`;
+
+      document.getElementById('itemModal').style.display = 'flex';
+      playSound('tick');
+    }
+
+    function closeItemModal() {
+      document.getElementById('itemModal').style.display = 'none';
+    }
+
+    function buyCurrentInspectedSkin() {
+      if (activeInspectedSkin) {
+        buySkinDirect(activeInspectedSkin.id);
+        closeItemModal();
+      }
+    }
+
+    function buySkinDirect(id) {
+      const skin = skinsDatabase.find(s => s.id === id);
+      if (!skin) return;
+
+      if (userBalance < skin.priceRub) {
+        if (confirm(`Недостаточно средств на балансе! Пополнить ${skin.priceRub - userBalance} ₽ через Telegram Stars или Карту?`)) {
+          openDepositModal();
+        }
+        return;
+      }
+
+      userBalance -= skin.priceRub;
+      updateBalanceUI();
+      userInventory.push({
+        id: Date.now(),
+        name: skin.name,
+        cat: skin.cat,
+        rarity: skin.rarity,
+        price: skin.priceRub,
+        float: skin.float,
+        img: skin.img
+      });
+      renderInventory();
+      playSound('coin');
+
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      }
+
+      alert(`✅ Покупка «${skin.name}» успешна!\nПредмет добавлен в ваш инвентарь.`);
+    }
+
+    function withdrawSkinSteam(idx) {
+      const item = userInventory[idx];
+      const tradeUrl = document.getElementById('tradeUrlInput').value.trim();
+
+      if (!tradeUrl) {
+        alert("⚠️ Пожалуйста, укажите ваш Steam Trade-URL в поле выше!");
+        document.getElementById('tradeUrlInput').focus();
+        return;
+      }
+
+      if (confirm(`Отправить «${item.name}» обменом в Steam?\nTrade Link: ${tradeUrl}`)) {
+        userInventory.splice(idx, 1);
+        renderInventory();
+        if (window.Telegram?.WebApp?.HapticFeedback) {
+          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        }
+        alert(`🚀 Запрос на обмен в Steam отправлен!\nБот отправил трейд. Примите его в Steam Guard в течение 5 минут.`);
+      }
+    }
+
+    function sellInventoryItem(idx) {
+      const item = userInventory[idx];
+      userBalance += item.price;
+      userInventory.splice(idx, 1);
+      updateBalanceUI();
+      renderInventory();
+      playSound('coin');
+    }
+
+    function sellAllInventory() {
+      if (userInventory.length === 0) return;
+      const total = userInventory.reduce((s, i) => s + i.price, 0);
+      if (confirm(`Продать все (${userInventory.length}) предметов на баланс за ${total.toLocaleString()} ₽?`)) {
+        userBalance += total;
+        userInventory = [];
+        updateBalanceUI();
+        renderInventory();
+        playSound('coin');
+      }
+    }
+
+    function saveTradeUrl() {
+      const val = document.getElementById('tradeUrlInput').value.trim();
+      if (val.includes('partner=') && val.includes('token=')) {
+        alert("✅ Steam Trade-URL успешно сохранен и верифицирован ботом!");
+      } else {
+        alert("⚠️ Введите корректный URL обмена Steam формата:\nhttps://steamcommunity.com/tradeoffer/new/?partner=...&token=...");
+      }
+    }
+
+    function openDepositModal() {
+      const sum = prompt("Введите сумму пополнения баланса в рублях (₽):", "1000");
+      if (sum && !isNaN(sum)) {
+        userBalance += parseInt(sum);
+        updateBalanceUI();
+        playSound('coin');
+        alert(`✅ Баланс успешно пополнен на ${sum} ₽!`);
+      }
+    }
+
+    // ==========================================
+    // ROULETTE & CASE OPENING SIMULATION
+    // ==========================================
+    let currentCaseOpening = null;
+    let rouletteWinningItem = null;
+
+    function openCaseRoulette(caseId) {
+      const c = casesData.find(x => x.id === caseId);
+      currentCaseOpening = c;
+
+      document.getElementById('rModalCaseTitle').innerText = c.name;
+      document.getElementById('btnSpinNow').innerText = `🎲 КРУТИТЬ (${c.price} ₽)`;
+      document.getElementById('rIdleText').style.display = 'block';
+      document.getElementById('rWinResult').style.display = 'none';
+      document.getElementById('rActionButtons').style.display = 'flex';
+      document.getElementById('rWonActions').style.display = 'none';
+
+      buildRouletteRibbon();
+      document.getElementById('rouletteModal').style.display = 'flex';
+      playSound('tick');
+    }
+
+    function closeRouletteModal() {
+      document.getElementById('rouletteModal').style.display = 'none';
+    }
+
+    function buildRouletteRibbon() {
+      const ribbon = document.getElementById('rouletteRibbon');
+      ribbon.style.transition = 'none';
+      ribbon.style.transform = 'translateX(0px)';
+
+      let slotsHtml = '';
+      for (let i = 0; i < 50; i++) {
+        const randomSkin = skinsDatabase[Math.floor(Math.random() * skinsDatabase.length)];
+        slotsHtml += `
+          <div class="roulette-slot" id="rslot-${i}">
+            <img src="${randomSkin.img}" class="roulette-slot-img">
+            <div class="roulette-slot-name">${randomSkin.name}</div>
+          </div>
+        `;
+      }
+      ribbon.innerHTML = slotsHtml;
+    }
+
+    function startRouletteSpin() {
+      if (userBalance < currentCaseOpening.price) {
+        alert("Недостаточно средств на балансе! Пополните баланс.");
+        return;
+      }
+
+      userBalance -= currentCaseOpening.price;
+      updateBalanceUI();
+
+      const btn = document.getElementById('btnSpinNow');
+      btn.disabled = true;
+
+      // Pick winner
+      const winIndex = 38; // target slot
+      rouletteWinningItem = skinsDatabase[Math.floor(Math.random() * skinsDatabase.length)];
+      
+      const targetSlot = document.getElementById(`rslot-${winIndex}`);
+      targetSlot.querySelector('img').src = rouletteWinningItem.img;
+      targetSlot.querySelector('.roulette-slot-name').innerText = rouletteWinningItem.name;
+
+      const ribbon = document.getElementById('rouletteRibbon');
+      const slotWidth = 100;
+      const targetOffset = (winIndex * slotWidth) - 170 + Math.floor(Math.random() * 40);
+
+      // Play tick sounds as it spins
+      let tickCount = 0;
+      const tickInterval = setInterval(() => {
+        playSound('tick');
+        tickCount++;
+        if (tickCount > 25) clearInterval(tickInterval);
+      }, 120);
+
+      ribbon.style.transition = 'transform 4.5s cubic-bezier(0.1, 0.95, 0.2, 1)';
+      ribbon.style.transform = `translateX(-${targetOffset}px)`;
+
+      setTimeout(() => {
+        targetSlot.classList.add('won-active');
+        playSound('win');
+        if (window.Telegram?.WebApp?.HapticFeedback) {
+          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        }
+
+        document.getElementById('rIdleText').style.display = 'none';
+        document.getElementById('rWinResult').style.display = 'block';
+        document.getElementById('rWonName').innerText = rouletteWinningItem.name;
+        document.getElementById('rWonPrice').innerText = `${rouletteWinningItem.priceRub.toLocaleString()} ₽`;
+
+        document.getElementById('rActionButtons').style.display = 'none';
+        document.getElementById('rWonActions').style.display = 'flex';
+        btn.disabled = false;
+      }, 4600);
+    }
+
+    function claimWonItemToInventory() {
+      if (!rouletteWinningItem) return;
+      userInventory.push({
+        id: Date.now(),
+        name: rouletteWinningItem.name,
+        cat: rouletteWinningItem.cat,
+        rarity: rouletteWinningItem.rarity,
+        price: rouletteWinningItem.priceRub,
+        float: rouletteWinningItem.float,
+        img: rouletteWinningItem.img
+      });
+      renderInventory();
+      closeRouletteModal();
+      playSound('coin');
+      alert(`🎉 Предмет «${rouletteWinningItem.name}» отправлен в ваш инвентарь!`);
+    }
+
+    function sellWonItemInstant() {
+      if (!rouletteWinningItem) return;
+      const sellPrice = Math.round(rouletteWinningItem.priceRub * 0.9);
+      userBalance += sellPrice;
+      updateBalanceUI();
+      closeRouletteModal();
+      playSound('coin');
+      alert(`💰 Предмет продан за ${sellPrice.toLocaleString()} ₽! Средства зачислены.`);
+    }
+
+    // ==========================================
+    // TRADE-UP CONTRACTS
+    // ==========================================
+    function addToContract(invIdx) {
+      const item = userInventory[invIdx];
+      const emptySlotIdx = contractSlots.findIndex(s => s === null);
+      if (emptySlotIdx === -1) {
+        alert("Все 3 слота контракта заполнены!");
+        return;
+      }
+      contractSlots[emptySlotIdx] = item;
+      userInventory.splice(invIdx, 1);
+      updateContractUI();
+      renderInventory();
+      playSound('tick');
+    }
+
+    function removeFromContract(slotIdx) {
+      if (contractSlots[slotIdx]) {
+        userInventory.push(contractSlots[slotIdx]);
+        contractSlots[slotIdx] = null;
+        updateContractUI();
+        renderInventory();
+        playSound('tick');
+      }
+    }
+
+    function updateContractUI() {
+      contractSlots.forEach((item, idx) => {
+        const slotEl = document.getElementById(`cslot-${idx}`);
+        if (item) {
+          slotEl.classList.add('filled');
+          slotEl.innerHTML = `<img src="${item.img}" style="max-width:40px; max-height:35px;">`;
+        } else {
+          slotEl.classList.remove('filled');
+          slotEl.innerText = '+';
+        }
+      });
+    }
+
+    function signContract() {
+      const filled = contractSlots.filter(s => s !== null);
+      if (filled.length < 3) {
+        alert("Для подписания контракта необходимо заполнить все 3 слота!");
+        return;
+      }
+
+      // Upgrade reward
+      const upgradePool = skinsDatabase.filter(s => s.rarity.includes('covert') || s.rarity.includes('knife'));
+      const wonReward = upgradePool[Math.floor(Math.random() * upgradePool.length)];
+
+      contractSlots = [null, null, null];
+      updateContractUI();
+
+      userInventory.push({
+        id: Date.now(),
+        name: wonReward.name,
+        cat: wonReward.cat,
+        rarity: wonReward.rarity,
+        price: wonReward.priceRub,
+        float: wonReward.float,
+        img: wonReward.img
+      });
+      renderInventory();
+      playSound('win');
+
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      }
+
+      alert(`🎉 КОНТРАКТ ВЫПОЛНЕН!\n\nВы получили: «${wonReward.name}» стоимостью ${wonReward.priceRub.toLocaleString()} ₽!`);
+    }
+  </script>
+</body>
+</html>
