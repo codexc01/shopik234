@@ -1064,7 +1064,7 @@
       </div>
 
       <button class="btn-submit" onclick="proceedToBotOrder()">
-        🤖 ОФОРМИТЬ В TELEGRAM БОТЕ
+        ОФОРМИТЬ
       </button>
     </div>
   </div>
@@ -1528,7 +1528,7 @@
         updateCartUI();
         closeModal('modalCart');
 
-        alert(`✅ Заказ #${res.order.orderId} успешно оформлен на сумму ${res.order.totalRub.toLocaleString()} ₽!\nДетали и реквизиты отправлены в чат бота.`);
+        alert(`✅ Заказ #${res.order.orderId} оформлен на сумму ${res.order.totalRub.toLocaleString()} ₽\nДетали отправили в чат бота`);
         
         try {
           if (window.Telegram?.WebApp?.close) {

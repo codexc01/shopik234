@@ -1,26 +1,47 @@
-import sqlite3
 import os
 import time
 from typing import List, Dict, Any, Optional, Tuple
 
-# путь к бд в зависимости от окружения
-if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
-    DB_PATH = "/tmp/norvex_shop.db"
-else:
-    DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "norvex_shop.db")
+# проверяем наличие postgres url
+DB_URL = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
+IS_POSTGRES = bool(DB_URL and ("postgres://" in DB_URL or "postgresql://" in DB_URL))
 
-# подключение к sqlite
+if IS_POSTGRES:
+    # заменяем старый префикс если нужно
+    if DB_URL.startswith("postgres://"):
+        DB_URL = DB_URL.replace("postgres://", "postgresql://", 1)
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+else:
+    import sqlite3
+    if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        DB_PATH = "/tmp/norvex_shop.db"
+    else:
+        DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "norvex_shop.db")
+
+# подключение к бд
 def get_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    if IS_POSTGRES:
+        conn = psycopg2.connect(DB_URL, cursor_factory=RealDictCursor)
+        conn.autocommit = True
+        return conn
+    else:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+def placeholder(sql: str) -> str:
+    # меняет ? на %s для postgres
+    if IS_POSTGRES:
+        return sql.replace("?", "%s")
+    return sql
 
 # создание таблиц в базе
 def init_db():
     conn = get_connection()
     cur = conn.cursor()
 
-    # категории товаров
+    # категории
     cur.execute("""
     CREATE TABLE IF NOT EXISTS categories (
         id TEXT PRIMARY KEY,
@@ -30,7 +51,7 @@ def init_db():
     );
     """)
 
-    # таблица товаров
+    # товары
     cur.execute("""
     CREATE TABLE IF NOT EXISTS products (
         id TEXT PRIMARY KEY,
@@ -41,61 +62,91 @@ def init_db():
         badge TEXT DEFAULT '',
         image_url TEXT DEFAULT '',
         description TEXT DEFAULT '',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE
-    );
-    """)
-
-    # заказы
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS orders (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        order_code TEXT UNIQUE NOT NULL,
-        buyer_id INTEGER,
-        buyer_name TEXT,
-        buyer_username TEXT,
-        total_rub INTEGER NOT NULL,
-        total_count INTEGER NOT NULL,
-        status TEXT DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
 
-    # товары внутри заказа
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS order_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        order_id INTEGER NOT NULL,
-        product_id TEXT NOT NULL,
-        product_name TEXT NOT NULL,
-        price INTEGER NOT NULL,
-        qty INTEGER NOT NULL,
-        subtotal INTEGER NOT NULL,
-        FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE
-    );
-    """)
+    # заказы
+    if IS_POSTGRES:
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS orders (
+            id SERIAL PRIMARY KEY,
+            order_code TEXT UNIQUE NOT NULL,
+            buyer_id BIGINT,
+            buyer_name TEXT,
+            buyer_username TEXT,
+            total_rub INTEGER NOT NULL,
+            total_count INTEGER NOT NULL,
+            status TEXT DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS order_items (
+            id SERIAL PRIMARY KEY,
+            order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+            product_id TEXT NOT NULL,
+            product_name TEXT NOT NULL,
+            price INTEGER NOT NULL,
+            qty INTEGER NOT NULL,
+            subtotal INTEGER NOT NULL
+        );
+        """)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        );
+        """)
+    else:
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_code TEXT UNIQUE NOT NULL,
+            buyer_id INTEGER,
+            buyer_name TEXT,
+            buyer_username TEXT,
+            total_rub INTEGER NOT NULL,
+            total_count INTEGER NOT NULL,
+            status TEXT DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS order_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id INTEGER NOT NULL,
+            product_id TEXT NOT NULL,
+            product_name TEXT NOT NULL,
+            price INTEGER NOT NULL,
+            qty INTEGER NOT NULL,
+            subtotal INTEGER NOT NULL,
+            FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE
+        );
+        """)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        );
+        """)
 
-    # настройки
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS settings (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL
-    );
-    """)
+    # создаем корневую категорию если пусто
+    cur.execute("SELECT COUNT(*) as cnt FROM categories;")
+    res = cur.fetchone()
+    count = res["cnt"] if (isinstance(res, dict) or hasattr(res, "keys")) else res[0]
+    if count == 0:
+        cur.execute(placeholder("INSERT INTO categories (id, name, icon_key, sort_order) VALUES (?, ?, ?, ?);"), ('all', 'Все товары', 'all', 0))
 
-    # создаем только корневую категорию если пусто
-    cur.execute("SELECT COUNT(*) FROM categories;")
-    if cur.fetchone()[0] == 0:
-        cur.execute("INSERT INTO categories (id, name, icon_key, sort_order) VALUES ('all', 'Все товары', 'all', 0);")
-
-    conn.commit()
+    if not IS_POSTGRES:
+        conn.commit()
     conn.close()
 
 # работа с категориями
 def get_categories() -> List[Dict[str, Any]]:
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, name, icon_key as iconKey, sort_order FROM categories ORDER BY sort_order ASC, id ASC;")
+    cur.execute("SELECT id, name, icon_key as \"iconKey\", sort_order FROM categories ORDER BY sort_order ASC, id ASC;")
     rows = [dict(r) for r in cur.fetchall()]
     conn.close()
     return rows
@@ -103,8 +154,9 @@ def get_categories() -> List[Dict[str, Any]]:
 def create_category(cat_id: str, name: str, icon_key: str) -> Dict[str, Any]:
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("INSERT INTO categories (id, name, icon_key, sort_order) VALUES (?, ?, ?, 10);", (cat_id, name, icon_key))
-    conn.commit()
+    cur.execute(placeholder("INSERT INTO categories (id, name, icon_key, sort_order) VALUES (?, ?, ?, 10);"), (cat_id, name, icon_key))
+    if not IS_POSTGRES:
+        conn.commit()
     conn.close()
     return {"id": cat_id, "name": name, "iconKey": icon_key}
 
@@ -113,9 +165,10 @@ def delete_category(cat_id: str) -> bool:
         return False
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("DELETE FROM categories WHERE id = ?;", (cat_id,))
-    cur.execute("UPDATE products SET category_id = 'keys' WHERE category_id = ?;", (cat_id,))
-    conn.commit()
+    cur.execute(placeholder("DELETE FROM categories WHERE id = ?;"), (cat_id,))
+    cur.execute(placeholder("UPDATE products SET category_id = 'keys' WHERE category_id = ?;"), (cat_id,))
+    if not IS_POSTGRES:
+        conn.commit()
     conn.close()
     return True
 
@@ -125,7 +178,7 @@ def get_products(category_id: Optional[str] = None, search: Optional[str] = None
     cur = conn.cursor()
     
     query = """
-    SELECT id, name, category_id as catId, price, old_price as oldPrice, badge, image_url as img, description as desc, created_at
+    SELECT id, name, category_id as "catId", price, old_price as "oldPrice", badge, image_url as img, description as "desc", created_at
     FROM products
     WHERE 1=1
     """
@@ -134,12 +187,12 @@ def get_products(category_id: Optional[str] = None, search: Optional[str] = None
         query += " AND category_id = ?"
         params.append(category_id)
     if search:
-        query += " AND (name LIKE ? OR description LIKE ?)"
+        query += " AND (name ILIKE ? OR description ILIKE ?)" if IS_POSTGRES else " AND (name LIKE ? OR description LIKE ?)"
         params.append(f"%{search}%")
         params.append(f"%{search}%")
     
     query += " ORDER BY created_at DESC;"
-    cur.execute(query, params)
+    cur.execute(placeholder(query), tuple(params))
     rows = [dict(r) for r in cur.fetchall()]
     conn.close()
     return rows
@@ -147,10 +200,10 @@ def get_products(category_id: Optional[str] = None, search: Optional[str] = None
 def get_product(prod_id: str) -> Optional[Dict[str, Any]]:
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("""
-    SELECT id, name, category_id as catId, price, old_price as oldPrice, badge, image_url as img, description as desc
+    cur.execute(placeholder("""
+    SELECT id, name, category_id as "catId", price, old_price as "oldPrice", badge, image_url as img, description as "desc"
     FROM products WHERE id = ?;
-    """, (prod_id,))
+    """), (prod_id,))
     row = cur.fetchone()
     conn.close()
     return dict(row) if row else None
@@ -159,11 +212,12 @@ def create_product(name: str, category_id: str, price: int, old_price: int, badg
     conn = get_connection()
     cur = conn.cursor()
     prod_id = f"prod_{int(time.time() * 1000)}"
-    cur.execute("""
+    cur.execute(placeholder("""
     INSERT INTO products (id, name, category_id, price, old_price, badge, image_url, description)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?);
-    """, (prod_id, name, category_id, price, old_price, badge, image_url, description))
-    conn.commit()
+    """), (prod_id, name, category_id, price, old_price, badge, image_url, description))
+    if not IS_POSTGRES:
+        conn.commit()
     conn.close()
     return {
         "id": prod_id,
@@ -179,20 +233,22 @@ def create_product(name: str, category_id: str, price: int, old_price: int, badg
 def update_product(prod_id: str, name: str, category_id: str, price: int, old_price: int, badge: str, image_url: str, description: str) -> Optional[Dict[str, Any]]:
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("""
+    cur.execute(placeholder("""
     UPDATE products
     SET name = ?, category_id = ?, price = ?, old_price = ?, badge = ?, image_url = ?, description = ?
     WHERE id = ?;
-    """, (name, category_id, price, old_price, badge, image_url, description, prod_id))
-    conn.commit()
+    """), (name, category_id, price, old_price, badge, image_url, description, prod_id))
+    if not IS_POSTGRES:
+        conn.commit()
     conn.close()
     return get_product(prod_id)
 
 def delete_product(prod_id: str) -> bool:
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("DELETE FROM products WHERE id = ?;", (prod_id,))
-    conn.commit()
+    cur.execute(placeholder("DELETE FROM products WHERE id = ?;"), (prod_id,))
+    if not IS_POSTGRES:
+        conn.commit()
     conn.close()
     return True
 
@@ -216,7 +272,7 @@ def create_secure_order(buyer_id: Optional[int], buyer_name: str, buyer_username
             continue
 
         # берем актуальную цену прямо из базы
-        cur.execute("SELECT id, name, price, image_url FROM products WHERE id = ?;", (prod_id,))
+        cur.execute(placeholder("SELECT id, name, price, image_url FROM products WHERE id = ?;"), (prod_id,))
         p = cur.fetchone()
         if not p:
             continue
@@ -240,20 +296,28 @@ def create_secure_order(buyer_id: Optional[int], buyer_name: str, buyer_username
         raise ValueError("выбранные товары не найдены")
 
     # запись заказа в бд
-    cur.execute("""
-    INSERT INTO orders (order_code, buyer_id, buyer_name, buyer_username, total_rub, total_count, status)
-    VALUES (?, ?, ?, ?, ?, ?, 'pending');
-    """, (order_code, buyer_id, buyer_name, buyer_username, total_rub, total_count))
-    order_db_id = cur.lastrowid
+    if IS_POSTGRES:
+        cur.execute("""
+        INSERT INTO orders (order_code, buyer_id, buyer_name, buyer_username, total_rub, total_count, status)
+        VALUES (%s, %s, %s, %s, %s, %s, 'pending') RETURNING id;
+        """, (order_code, buyer_id, buyer_name, buyer_username, total_rub, total_count))
+        order_db_id = cur.fetchone()["id"]
+    else:
+        cur.execute("""
+        INSERT INTO orders (order_code, buyer_id, buyer_name, buyer_username, total_rub, total_count, status)
+        VALUES (?, ?, ?, ?, ?, ?, 'pending');
+        """, (order_code, buyer_id, buyer_name, buyer_username, total_rub, total_count))
+        order_db_id = cur.lastrowid
 
     # запись позиций заказа
     for vi in verified_items:
-        cur.execute("""
+        cur.execute(placeholder("""
         INSERT INTO order_items (order_id, product_id, product_name, price, qty, subtotal)
         VALUES (?, ?, ?, ?, ?, ?);
-        """, (order_db_id, vi["product_id"], vi["name"], vi["price"], vi["qty"], vi["subtotal"]))
+        """), (order_db_id, vi["product_id"], vi["name"], vi["price"], vi["qty"], vi["subtotal"]))
 
-    conn.commit()
+    if not IS_POSTGRES:
+        conn.commit()
     conn.close()
 
     order_data = {
@@ -274,16 +338,24 @@ def create_secure_order(buyer_id: Optional[int], buyer_name: str, buyer_username
 def get_setting(key: str, default: str = "") -> str:
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT value FROM settings WHERE key = ?;", (key,))
+    cur.execute(placeholder("SELECT value FROM settings WHERE key = ?;"), (key,))
     row = cur.fetchone()
     conn.close()
-    return row[0] if row else default
+    if row:
+        return row[0] if isinstance(row, (tuple, list)) else row["value"]
+    return default
 
 def set_setting(key: str, value: str):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?);", (key, value))
-    conn.commit()
+    if IS_POSTGRES:
+        cur.execute("""
+        INSERT INTO settings (key, value) VALUES (%s, %s)
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+        """, (key, value))
+    else:
+        cur.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?);", (key, value))
+        conn.commit()
     conn.close()
 
 # инициализируем базу данных

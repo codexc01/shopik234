@@ -2,34 +2,48 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SKINDROP PRO // CS2 & Dota 2 Telegram Marketplace & Battles</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>NORVEX SHOP // Telegram Mini App</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0b0d13;
-      --bg-surface: #121520;
-      --card-bg: rgba(20, 24, 38, 0.78);
-      --card-border: rgba(255, 255, 255, 0.08);
-      --gold: #ffd700;
-      --gold-glow: rgba(255, 215, 0, 0.4);
-      --covert: #eb4b4b;
-      --covert-glow: rgba(235, 75, 75, 0.45);
-      --classified: #d32ce6;
-      --restricted: #8847ff;
-      --mil-spec: #4b69ff;
-      --accent: #ff5722;
-      --accent-glow: rgba(255, 87, 34, 0.4);
-      --green: #00ff88;
-      --text: #f3f5f9;
-      --text-muted: #838eab;
-      --ton-blue: #0098ea;
-      --font-display: 'Chakra Petch', sans-serif;
-      --font-body: 'Plus Jakarta Sans', sans-serif;
+      /* Minimalist Titanium & Graphite Palette */
+      --bg: #0d0e12;
+      --bg-surface: #15171d;
+      --bg-surface-elevated: #1e2129;
+      --bg-surface-hover: #282c37;
+      
+      --border-subtle: rgba(255, 255, 255, 0.07);
+      --border-medium: rgba(255, 255, 255, 0.14);
+      --border-strong: rgba(255, 255, 255, 0.25);
+      
+      --text-main: #ffffff;
+      --text-secondary: #c8ccd6;
+      --text-muted: #808696;
+      --text-dim: #505666;
+      
+      --accent: #f2f4f8;
+      --accent-dark: #0d0e12;
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.18);
+      --admin-gold: #f59e0b;
+      
+      --badge-hit: #f97316;
+      --badge-sale: #ef4444;
+      --badge-new: #06b6d4;
+      --badge-top: #a855f7;
+      
+      --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
+      
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --radius-xl: 24px;
     }
 
     * {
@@ -40,239 +54,132 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    body {
+    html, body {
+      width: 100%;
+      height: 100%;
       background: var(--bg);
-      color: var(--text);
+      color: var(--text-main);
       font-family: var(--font-body);
-      min-height: 100vh;
-      padding-bottom: 95px;
       overflow-x: hidden;
-      position: relative;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* Ambient dynamic glow */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: 
-        radial-gradient(circle at 15% 10%, rgba(255, 87, 34, 0.12) 0%, transparent 40%),
-        radial-gradient(circle at 85% 30%, rgba(211, 44, 230, 0.1) 0%, transparent 45%),
-        radial-gradient(circle at 50% 90%, rgba(0, 255, 136, 0.08) 0%, transparent 50%),
-        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-      background-size: 100% 100%, 100% 100%, 100% 100%, 28px 28px, 28px 28px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .container {
+    .app-viewport {
+      width: 100%;
+      min-height: 100vh;
+      min-height: 100dvh;
       max-width: 480px;
       margin: 0 auto;
-      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 16px calc(88px + env(safe-area-inset-bottom, 16px)) 16px;
       position: relative;
-      z-index: 1;
     }
 
-    /* Live Drops Feed */
-    .live-feed-wrap {
-      background: rgba(14, 17, 27, 0.85);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-      padding: 6px 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      overflow: hidden;
-      backdrop-filter: blur(10px);
-      position: sticky;
-      top: 0;
-      z-index: 90;
-    }
-
-    .live-feed-badge {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-family: var(--font-display);
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--green);
-      white-space: nowrap;
-      text-transform: uppercase;
-    }
-
-    .live-pulse {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 8px var(--green);
-      animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0% { opacity: 0.4; transform: scale(0.9); }
-      50% { opacity: 1; transform: scale(1.3); }
-      100% { opacity: 0.4; transform: scale(0.9); }
-    }
-
-    .live-items-track {
-      display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      padding: 2px 0;
-      white-space: nowrap;
-    }
-    .live-items-track::-webkit-scrollbar { display: none; }
-
-    .live-item {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-      padding: 3px 8px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 10px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .live-item:hover { border-color: var(--gold); }
-    .live-item.gold { border-color: var(--gold); background: rgba(255, 215, 0, 0.1); }
-    .live-item.covert { border-color: var(--covert); background: rgba(235, 75, 75, 0.1); }
-
-    /* Header */
+    /* Minimalist Header */
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin: 12px 0 14px 0;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--border-subtle);
     }
 
-    .brand-wrap {
+    .brand {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
+      cursor: pointer;
     }
 
-    .brand-logo-glow {
-      width: 38px;
-      height: 38px;
-      background: linear-gradient(135deg, var(--accent), #ff2a6d);
-      border-radius: 10px;
+    .brand-icon-box {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(145deg, #22252f, #14161d);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
-      box-shadow: 0 0 18px var(--accent-glow);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    }
+
+    .brand-icon-svg {
+      width: 24px;
+      height: 24px;
+      fill: #f59e0b;
     }
 
     .brand-title {
       font-family: var(--font-display);
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 800;
-      letter-spacing: 0.5px;
-      background: linear-gradient(90deg, #fff, #ff7e54);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .brand-badge {
-      font-size: 9px;
-      font-weight: 800;
-      color: var(--gold);
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-
-    .header-user-actions {
+      letter-spacing: -0.3px;
+      color: var(--text-main);
+      line-height: 1;
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    .balance-badge {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 18px;
-      padding: 5px 10px;
-      font-size: 12px;
+    .admin-status-pill {
+      display: none;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid var(--admin-gold);
+      color: var(--admin-gold);
+      font-size: 10px;
       font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 6px;
+      vertical-align: middle;
+    }
+
+    body.admin-mode .admin-status-pill {
+      display: inline-block;
+    }
+
+    .header-actions {
       display: flex;
       align-items: center;
       gap: 6px;
-      cursor: pointer;
-      backdrop-filter: blur(8px);
     }
-    .balance-badge:hover { border-color: var(--green); }
 
-    .btn-sound-toggle {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
+    .btn-header-action {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      width: 38px;
+      height: 38px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #fff;
+      color: var(--text-secondary);
       cursor: pointer;
-      font-size: 13px;
-    }
-
-    /* Primary Navigation Bar (Market / Cases / Inventory / Contracts) */
-    .primary-nav {
-      display: flex;
-      background: rgba(14, 18, 28, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
-      padding: 4px;
-      gap: 4px;
-      margin-bottom: 16px;
-      backdrop-filter: blur(12px);
-    }
-
-    .p-nav-btn {
-      flex: 1;
-      border: none;
-      background: none;
-      color: var(--text-muted);
-      font-family: var(--font-display);
-      font-size: 11px;
-      font-weight: 700;
-      padding: 9px 4px;
-      border-radius: 12px;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
+      font-size: 15px;
       transition: all 0.2s;
     }
 
-    .p-nav-btn.active {
-      background: linear-gradient(135deg, rgba(255, 87, 34, 0.25), rgba(211, 44, 230, 0.2));
-      border: 1px solid rgba(255, 87, 34, 0.4);
-      color: #fff;
-      box-shadow: 0 4px 15px rgba(255, 87, 34, 0.25);
+    .btn-header-action svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
     }
 
-    /* Views */
-    .view-content { display: none; animation: fadeIn 0.25s ease-out; }
-    .view-content.active { display: block; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
+    /* Admin-only elements control */
+    .admin-only {
+      display: none !important;
     }
 
-    /* SEARCH & FILTER BAR */
-    .search-filter-row {
+    body.admin-mode .admin-only {
+      display: flex !important;
+    }
+
+    /* Search & Add Action Row */
+    .search-row {
       display: flex;
       gap: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
 
     .search-box {
@@ -282,545 +189,445 @@
 
     .search-input {
       width: 100%;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 10px 14px 10px 38px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 11px 14px 11px 38px;
       color: #fff;
       font-size: 13px;
+      font-family: var(--font-body);
       outline: none;
       transition: all 0.2s;
     }
-    .search-input:focus { border-color: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
+
+    .search-input:focus {
+      border-color: var(--border-strong);
+      background: var(--bg-surface-elevated);
+    }
 
     .search-icon {
       position: absolute;
-      left: 12px;
+      left: 13px;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 14px;
-      color: var(--text-muted);
-    }
-
-    .currency-pill-btn {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 12px;
-      padding: 0 12px;
-      font-size: 12px;
-      font-weight: 800;
-      color: #fff;
-      cursor: pointer;
+      width: 15px;
+      height: 15px;
+      fill: var(--text-muted);
+      pointer-events: none;
       display: flex;
       align-items: center;
-      gap: 4px;
     }
 
-    .tags-row {
+    .btn-add-item {
+      background: var(--accent);
+      color: var(--accent-dark);
+      border: none;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 800;
+      padding: 0 16px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      transition: transform 0.15s;
+    }
+
+    .btn-add-item:active {
+      transform: scale(0.95);
+    }
+
+    /* Category Bar with Vector Icons */
+    .categories-wrap {
       display: flex;
       gap: 6px;
       overflow-x: auto;
-      padding-bottom: 6px;
-      margin-bottom: 16px;
+      padding-bottom: 4px;
+      margin-bottom: 14px;
       scrollbar-width: none;
     }
-    .tags-row::-webkit-scrollbar { display: none; }
+    .categories-wrap::-webkit-scrollbar { display: none; }
 
-    .tag-btn {
-      white-space: nowrap;
-      padding: 6px 12px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 10px;
+    .cat-pill {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 8px 13px;
       color: var(--text-muted);
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
+      white-space: nowrap;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .cat-pill svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+      flex-shrink: 0;
+    }
+
+    .cat-pill:hover {
+      border-color: var(--border-medium);
+      color: var(--text-secondary);
+    }
+
+    .cat-pill.active {
+      background: var(--accent);
+      color: var(--accent-dark);
+      border-color: var(--accent);
+    }
+
+    .cat-pill.active svg {
+      fill: var(--accent-dark);
+    }
+
+    .cat-pill.add-cat-btn {
+      border-style: dashed;
+      border-color: var(--border-medium);
+      color: var(--text-secondary);
+    }
+
+    .btn-del-cat {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--danger-bg);
+      color: var(--danger);
+      font-size: 10px;
+      font-weight: 800;
+      margin-left: 4px;
+      cursor: pointer;
+      line-height: 1;
       transition: all 0.15s;
     }
 
-    .tag-btn.active, .tag-btn:hover {
-      background: rgba(255, 87, 34, 0.15);
-      border-color: var(--accent);
+    .btn-del-cat:hover {
+      background: var(--danger);
       color: #fff;
     }
 
-    /* GRID OF SKINS */
-    .skins-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
+    body.admin-mode .btn-del-cat {
+      display: inline-flex;
     }
 
-    .skin-card {
-      background: var(--card-bg);
-      border-radius: 16px;
-      border: 1px solid var(--card-border);
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow: hidden;
-      cursor: pointer;
-      backdrop-filter: blur(10px);
-      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .skin-card:hover {
-      transform: translateY(-3px);
-      border-color: rgba(255, 255, 255, 0.25);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-    }
-
-    /* Rarity top line & glow */
-    .skin-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-    }
-
-    .rarity-knife::before { background: var(--gold); box-shadow: 0 0 12px var(--gold); }
-    .rarity-covert::before { background: var(--covert); box-shadow: 0 0 10px var(--covert); }
-    .rarity-classified::before { background: var(--classified); box-shadow: 0 0 10px var(--classified); }
-    .rarity-restricted::before { background: var(--restricted); }
-    .rarity-mil-spec::before { background: var(--mil-spec); }
-
-    .skin-card.rarity-knife { border-color: rgba(255, 215, 0, 0.25); }
-    .skin-card.rarity-covert { border-color: rgba(235, 75, 75, 0.25); }
-
-    .skin-img-box {
-      height: 105px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      margin-bottom: 8px;
-    }
-
-    .skin-img {
-      max-width: 90%;
-      max-height: 95px;
-      object-fit: contain;
-      filter: drop-shadow(0 6px 12px rgba(0,0,0,0.6));
-      transition: transform 0.25s;
-    }
-
-    .skin-card:hover .skin-img {
-      transform: scale(1.08) rotate(-2deg);
-    }
-
-    .float-mini-tag {
-      position: absolute;
-      top: 2px;
-      right: 2px;
-      font-family: var(--font-mono);
-      font-size: 9px;
-      font-weight: 700;
-      color: var(--green);
-      background: rgba(0, 0, 0, 0.6);
-      padding: 2px 6px;
-      border-radius: 6px;
-      border: 1px solid rgba(0, 255, 136, 0.2);
-    }
-
-    .skin-name {
-      font-size: 12px;
-      font-weight: 700;
-      line-height: 1.3;
-      margin-bottom: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .skin-sub {
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
+    /* Section Meta */
+    .section-meta-row {
       display: flex;
       justify-content: space-between;
-    }
-
-    .skin-card-footer {
-      display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-top: auto;
-      padding-top: 4px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .skin-price {
-      font-family: var(--font-display);
-      font-size: 14px;
-      font-weight: 800;
-      color: #fff;
-    }
-
-    .btn-card-action {
-      background: linear-gradient(135deg, var(--accent), #ff2a6d);
-      border: none;
-      color: #fff;
+      margin-bottom: 12px;
       font-size: 11px;
       font-weight: 800;
-      padding: 5px 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: transform 0.15s;
-    }
-    .btn-card-action:active { transform: scale(0.93); }
-
-    /* ===================================================
-       CASES VIEW
-       =================================================== */
-    .cases-hero-banner {
-      background: linear-gradient(135deg, rgba(235, 75, 75, 0.25), rgba(211, 44, 230, 0.2)), var(--card-bg);
-      border: 1px solid rgba(235, 75, 75, 0.35);
-      border-radius: 20px;
-      padding: 16px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      backdrop-filter: blur(12px);
+      color: var(--text-muted);
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
     }
 
-    .cases-hero-title {
-      font-family: var(--font-display);
-      font-size: 16px;
-      font-weight: 800;
-      color: #fff;
-      margin-bottom: 4px;
-    }
-
-    .cases-grid {
+    /* Items Grid */
+    .items-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 12px;
     }
 
-    .case-box-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 18px;
-      padding: 16px 12px;
-      text-align: center;
-      cursor: pointer;
+    .item-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
       position: relative;
-      overflow: hidden;
       transition: transform 0.2s, border-color 0.2s;
     }
 
-    .case-box-card:hover {
-      transform: translateY(-4px);
-      border-color: var(--gold);
-      box-shadow: 0 10px 25px rgba(255, 215, 0, 0.15);
+    .item-card:hover {
+      border-color: var(--border-medium);
     }
 
-    .case-icon-anim {
-      font-size: 46px;
-      margin: 8px 0;
-      display: inline-block;
-      animation: floatCase 3s ease-in-out infinite alternate;
-    }
-
-    @keyframes floatCase {
-      from { transform: translateY(0); }
-      to { transform: translateY(-6px) scale(1.04); }
-    }
-
-    .case-title {
-      font-family: var(--font-display);
-      font-size: 13px;
-      font-weight: 800;
-      margin-bottom: 4px;
-    }
-
-    .case-chance {
-      font-size: 10px;
-      color: var(--gold);
-      margin-bottom: 12px;
-      font-weight: 700;
-    }
-
-    .btn-open-case {
+    .item-img-box {
       width: 100%;
-      background: linear-gradient(135deg, var(--accent), #ff0055);
-      border: none;
-      color: #fff;
-      font-family: var(--font-display);
-      font-size: 12px;
-      font-weight: 800;
-      padding: 9px;
-      border-radius: 10px;
-      cursor: pointer;
-      box-shadow: 0 4px 15px var(--accent-glow);
-    }
-
-    /* ===================================================
-       INVENTORY VIEW
-       =================================================== */
-    .trade-url-card {
-      background: rgba(0, 255, 136, 0.05);
-      border: 1px solid rgba(0, 255, 136, 0.25);
-      border-radius: 16px;
-      padding: 14px;
-      margin-bottom: 16px;
-    }
-
-    .trade-input-row {
-      display: flex;
-      gap: 6px;
-      margin-top: 8px;
-    }
-
-    .trade-input {
-      flex: 1;
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 10px;
-      padding: 8px 12px;
-      color: #fff;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      outline: none;
-    }
-
-    .btn-save-trade {
-      background: var(--green);
-      color: #000;
-      font-weight: 800;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 11px;
-    }
-
-    /* ===================================================
-       CONTRACTS (TRADE-UP) VIEW
-       =================================================== */
-    .contract-station {
-      background: var(--card-bg);
-      border: 1px solid rgba(211, 44, 230, 0.3);
-      border-radius: 20px;
-      padding: 18px;
-      text-align: center;
-      margin-bottom: 16px;
-    }
-
-    .contract-slots {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin: 16px 0;
-    }
-
-    .contract-slot {
-      width: 55px;
-      height: 55px;
-      border: 2px dashed rgba(255, 255, 255, 0.2);
-      border-radius: 12px;
+      aspect-ratio: 1 / 1;
+      background: #090a0d;
+      border-radius: var(--radius-md);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
-      background: rgba(0, 0, 0, 0.3);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .contract-slot.filled {
-      border-style: solid;
-      border-color: var(--classified);
-      background: rgba(211, 44, 230, 0.15);
-    }
-
-    /* ===================================================
-       ROULETTE MODAL SCREEN (CS:GO CAROUSEL)
-       =================================================== */
-    .roulette-modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(6, 8, 14, 0.95);
-      backdrop-filter: blur(16px);
-      z-index: 300;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-
-    .roulette-box {
-      width: 100%;
-      max-width: 440px;
-      background: #111420;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 24px;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
-      position: relative;
+      margin-bottom: 8px;
       overflow: hidden;
-    }
-
-    .roulette-viewport {
-      width: 100%;
-      height: 120px;
-      background: #090a10;
-      border-radius: 14px;
-      border: 2px solid var(--accent);
-      margin: 18px 0;
       position: relative;
-      overflow: hidden;
-      box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+      border: 1px solid rgba(255, 255, 255, 0.04);
     }
 
-    .roulette-pointer {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 4px;
-      background: var(--gold);
-      box-shadow: 0 0 15px var(--gold);
-      z-index: 20;
-      pointer-events: none;
-    }
-
-    .roulette-pointer::before {
-      content: '▼';
-      position: absolute;
-      top: -2px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: var(--gold);
-      font-size: 12px;
-    }
-
-    .roulette-ribbon {
-      display: flex;
+    .item-img {
+      width: 100%;
       height: 100%;
-      align-items: center;
+      object-fit: cover;
+      transition: transform 0.25s;
+    }
+
+    .item-card:hover .item-img {
+      transform: scale(1.04);
+    }
+
+    .item-category-tag {
       position: absolute;
-      left: 0;
-      top: 0;
-      will-change: transform;
-    }
-
-    .roulette-slot {
-      width: 100px;
-      height: 100px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255, 255, 255, 0.03);
-      border-right: 1px solid rgba(255, 255, 255, 0.06);
-      padding: 6px;
-      position: relative;
-    }
-
-    .roulette-slot.won-active {
-      background: rgba(255, 215, 0, 0.2);
-      border: 2px solid var(--gold);
-    }
-
-    .roulette-slot-img {
-      max-width: 60px;
-      max-height: 50px;
-      object-fit: contain;
-      margin-bottom: 4px;
-    }
-
-    .roulette-slot-name {
+      top: 6px;
+      left: 6px;
+      background: rgba(14, 15, 18, 0.88);
+      backdrop-filter: blur(6px);
+      border: 1px solid var(--border-subtle);
+      padding: 3px 7px;
+      border-radius: 6px;
       font-size: 9px;
       font-weight: 700;
+      color: var(--text-secondary);
+      z-index: 2;
+    }
+
+    /* Product Badges */
+    .item-promo-badge {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      padding: 3px 7px;
+      border-radius: 6px;
+      font-size: 9px;
+      font-weight: 800;
+      color: #fff;
+      z-index: 2;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      letter-spacing: 0.3px;
+    }
+    .badge-hit { background: linear-gradient(135deg, #f97316, #ea580c); }
+    .badge-sale { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .badge-new { background: linear-gradient(135deg, #06b6d4, #0284c7); }
+    .badge-top { background: linear-gradient(135deg, #a855f7, #7c3aed); }
+
+    /* Admin Action Controls inside Card */
+    .admin-card-actions {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      display: none;
+      align-items: center;
+      gap: 4px;
+      z-index: 10;
+    }
+
+    body.admin-mode .admin-card-actions {
+      display: flex !important;
+    }
+
+    body.admin-mode .item-promo-badge {
+      display: none;
+    }
+
+    .btn-edit-item {
+      background: rgba(245, 158, 11, 0.3);
+      border: 1px solid var(--admin-gold);
+      color: var(--admin-gold);
+      border-radius: 6px;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-delete-item {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      border-radius: 6px;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .item-name {
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 3px;
+      color: var(--text-main);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .item-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 90px;
     }
 
-    .win-display-area {
-      min-height: 75px;
+    .item-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid var(--border-subtle);
+      gap: 6px;
+    }
+
+    .item-price-wrap {
       display: flex;
       flex-direction: column;
+      gap: 1px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .item-price-old {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: line-through;
+      line-height: 1;
+    }
+
+    .item-price {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.1;
+    }
+
+    /* Cart Quantity Controller inside Card */
+    .card-cart-controls {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 2px;
+    }
+
+    .btn-qty {
+      background: none;
+      border: none;
+      color: var(--text-main);
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
       align-items: center;
       justify-content: center;
+      transition: background 0.15s;
     }
 
-    .win-skin-title {
-      font-family: var(--font-display);
-      font-size: 18px;
-      font-weight: 900;
-      color: var(--gold);
-      margin-bottom: 4px;
+    .btn-qty:active {
+      background: rgba(255, 255, 255, 0.2);
     }
 
-    .win-skin-price {
-      font-size: 14px;
+    .qty-display {
+      font-family: var(--font-mono);
+      font-size: 13px;
       font-weight: 800;
-      color: var(--green);
+      min-width: 20px;
+      text-align: center;
+      color: var(--text-main);
     }
 
-    /* Float / Item Details Modal */
-    .item-modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.88);
-      backdrop-filter: blur(12px);
-      z-index: 310;
-      display: none;
-      align-items: flex-end;
+    .btn-first-add {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-medium);
+      color: var(--text-main);
+      padding: 6px 10px;
+      height: 30px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
       justify-content: center;
+      gap: 4px;
+      white-space: nowrap;
+      transition: all 0.15s;
     }
 
-    .item-sheet {
-      background: #121624;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 26px 26px 0 0;
-      width: 100%;
-      max-width: 480px;
-      padding: 22px;
-      max-height: 85vh;
-      overflow-y: auto;
-      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    .btn-first-add:hover {
+      border-color: var(--accent);
+      color: #fff;
     }
 
-    @keyframes slideUp {
-      from { transform: translateY(100%); }
-      to { transform: translateY(0); }
+    .btn-first-add:active {
+      transform: scale(0.92);
+      background: var(--accent);
+      color: #000;
     }
 
-    .wear-bar-wrap {
-      margin: 16px 0;
+    .btn-clear-cart {
+      background: var(--danger-bg);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: var(--danger);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 11px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
     }
 
-    .wear-track {
-      height: 8px;
-      border-radius: 6px;
-      background: linear-gradient(90deg, #4b69ff 0%, #8847ff 25%, #d32ce6 50%, #eb4b4b 75%, #ffd700 100%);
-      position: relative;
-      margin: 8px 0;
+    .btn-clear-cart svg {
+      width: 13px;
+      height: 13px;
+      fill: currentColor;
     }
 
-    .wear-needle {
-      position: absolute;
-      top: -4px;
-      width: 4px;
-      height: 16px;
-      background: #fff;
-      border-radius: 2px;
-      box-shadow: 0 0 8px #fff;
+    .btn-clear-cart:hover {
+      background: var(--danger);
+      color: #fff;
     }
 
-    /* Fixed Bottom Action Bar */
+    .btn-clear-cart:active {
+      transform: scale(0.95);
+    }
+
+    /* Empty state */
+    .empty-state {
+      grid-column: span 2;
+      text-align: center;
+      padding: 44px 20px;
+      background: var(--bg-surface);
+      border: 1px dashed var(--border-medium);
+      border-radius: var(--radius-xl);
+    }
+
+    /* Floating Bottom Action Bar */
     .bottom-bar {
       position: fixed;
       bottom: 0;
@@ -828,858 +635,1094 @@
       right: 0;
       max-width: 480px;
       margin: 0 auto;
-      background: rgba(14, 18, 28, 0.94);
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 10px 16px;
-      backdrop-filter: blur(16px);
+      background: rgba(18, 20, 25, 0.96);
+      border-top: 1px solid var(--border-medium);
+      backdrop-filter: blur(20px);
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)) 16px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       z-index: 100;
+      box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
     }
 
-    .btn-deposit {
-      background: linear-gradient(135deg, var(--green), #059669);
-      color: #000;
-      font-weight: 900;
-      font-size: 13px;
+    .cart-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cart-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .cart-sum {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .btn-checkout {
+      background: var(--accent);
+      color: var(--accent-dark);
       border: none;
-      padding: 10px 18px;
-      border-radius: 12px;
+      padding: 13px 22px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 800;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 6px;
+      transition: transform 0.15s;
+    }
+
+    .btn-checkout:active {
+      transform: scale(0.96);
+    }
+
+    /* Modal / Bottom Drawer */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(10px);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-sheet {
+      background: #14161c;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      width: 100%;
+      max-width: 480px;
+      max-height: 88vh;
+      max-height: 88dvh;
+      overflow-y: auto;
+      padding: 20px 18px calc(24px + env(safe-area-inset-bottom, 0px)) 18px;
+      animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+    }
+
+    .modal-close {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .form-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      background: #0d0e12;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 11px 13px;
+      color: #fff;
+      font-size: 13px;
+      font-family: var(--font-body);
+      outline: none;
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: var(--border-strong);
+    }
+
+    /* Gallery Photo Upload Box */
+    .gallery-upload-box {
+      border: 2px dashed var(--border-medium);
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+      min-height: 110px;
+    }
+
+    .gallery-upload-box:active {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .gallery-preview-img {
+      width: 100%;
+      max-height: 130px;
+      object-fit: contain;
+      border-radius: var(--radius-sm);
+      display: none;
+    }
+
+    .file-input-hidden {
+      display: none;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--accent);
+      color: var(--accent-dark);
+      border: none;
+      padding: 14px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-submit:active {
+      transform: scale(0.98);
+    }
+
+    /* Cart Item Row */
+    .cart-row-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0d0e12;
+      border: 1px solid var(--border-subtle);
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      margin-bottom: 8px;
+    }
+
+    .cart-row-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .cart-row-img {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      background: #000;
+    }
+
+    .cart-row-info {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .cart-row-title {
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cart-row-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      margin-top: 2px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Live Drops Top Ticker -->
-  <div class="live-feed-wrap">
-    <div class="live-feed-badge">
-      <span class="live-pulse"></span> LIVE
-    </div>
-    <div class="live-items-track" id="liveFeedTrack">
-      <!-- Injected live drops -->
-    </div>
-  </div>
-
-  <div class="container">
+  <div class="app-viewport">
     <!-- Header -->
     <header>
-      <div class="brand-wrap">
-        <div class="brand-logo-glow">⚔️</div>
-        <div>
-          <div class="brand-title">SKINDROP PRO</div>
-          <div class="brand-badge">CS2 & DOTA 2 MARKETPLACE</div>
+      <div class="brand" onclick="loadBootstrap()" title="NORVEX SHOP">
+        <div class="brand-icon-box">
+          <svg class="brand-icon-svg" viewBox="0 0 24 24">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+        </div>
+        <div class="brand-title">
+          <span id="storeNameText">NORVEX SHOP</span>
+          <span class="admin-status-pill">👑 Админ</span>
         </div>
       </div>
 
-      <div class="header-user-actions">
-        <div class="balance-badge" id="userBalanceBtn" onclick="openDepositModal()">
-          <span>💳</span>
-          <span id="headerBalanceText">2,450 ₽</span>
-        </div>
-        <button class="btn-sound-toggle" id="soundBtn" onclick="toggleAudio()" title="Звук">
-          🔊
+      <div class="header-actions">
+        <button class="btn-header-action admin-only" onclick="openSettingsModal()" title="Настройки шопа">
+          <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
         </button>
       </div>
     </header>
 
-    <!-- Main Navigation Tabs -->
-    <div class="primary-nav">
-      <button class="p-nav-btn active" onclick="switchNav('market', this)">
-        <span>🛒</span> Маркет
-      </button>
-      <button class="p-nav-btn" onclick="switchNav('cases', this)">
-        <span>📦</span> Кейсы
-      </button>
-      <button class="p-nav-btn" onclick="switchNav('inventory', this)">
-        <span>🎒</span> Инвентарь (<span id="navInvCount">0</span>)
-      </button>
-      <button class="p-nav-btn" onclick="switchNav('contracts', this)">
-        <span>🧪</span> Контракты
+    <!-- Search & Add Action -->
+    <div class="search-row">
+      <div class="search-box">
+        <span class="search-icon">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        </span>
+        <input type="text" id="searchInput" class="search-input" placeholder="Поиск товаров...">
+      </div>
+      <!-- Add Item only visible to Admin -->
+      <button class="btn-add-item admin-only" onclick="openProductModal()">
+        <span>+ Товар</span>
       </button>
     </div>
 
-    <!-- ==========================================
-         VIEW 1: MARKETPLACE
-         ========================================== -->
-    <div class="view-content active" id="view-market">
-      <div class="search-filter-row">
-        <div class="search-box">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="marketSearchInput" class="search-input" placeholder="Поиск оружия, скина, ножа...">
-        </div>
-        <button class="currency-pill-btn" id="currencyToggleBtn" onclick="toggleCurrency()">
-          <span>₽ / ⭐</span>
-        </button>
-      </div>
+    <!-- Category Filter Bar -->
+    <div class="categories-wrap" id="categoriesBar"></div>
 
-      <div class="tags-row">
-        <button class="tag-btn active" onclick="filterTag('all', this)">⚡ Все скины</button>
-        <button class="tag-btn" onclick="filterTag('knife', this)">🔪 Ножи и Перчатки</button>
-        <button class="tag-btn" onclick="filterTag('rifle', this)">🔫 Винтовки</button>
-        <button class="tag-btn" onclick="filterTag('sniper', this)">🎯 Снайперские</button>
-        <button class="tag-btn" onclick="filterTag('dota', this)">🛡️ Dota 2</button>
-      </div>
-
-      <div class="skins-grid" id="marketGrid"></div>
+    <!-- Meta Info -->
+    <div class="section-meta-row">
+      <span id="gridCountLabel">КАТАЛОГ (0)</span>
+      <span id="activeCategoryName" style="color:var(--text-secondary);">Все товары</span>
     </div>
 
-    <!-- ==========================================
-         VIEW 2: CASES & BATTLES
-         ========================================== -->
-    <div class="view-content" id="view-cases">
-      <div class="cases-hero-banner">
-        <div>
-          <div class="cases-hero-title">🔥 CS2 CASE BATTLES</div>
-          <div style="font-size: 11px; color: var(--text-muted);">Мгновенный вывод в Steam Trade • Шанс ножа до 5%</div>
-        </div>
-        <div style="font-size: 28px;">📦</div>
-      </div>
-
-      <div class="cases-grid" id="casesGrid"></div>
-    </div>
-
-    <!-- ==========================================
-         VIEW 3: INVENTORY
-         ========================================== -->
-    <div class="view-content" id="view-inventory">
-      <!-- Steam Trade-URL Card -->
-      <div class="trade-url-card">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:12px; font-weight:800; color:var(--green);">🛡️ STEAM TRADE-LINK ПОДКЛЮЧЕНИЕ</span>
-          <span style="font-size:10px; color:var(--text-muted);">Бот активен</span>
-        </div>
-        <div class="trade-input-row">
-          <input type="text" id="tradeUrlInput" class="trade-input" placeholder="https://steamcommunity.com/tradeoffer/new/?partner=...">
-          <button class="btn-save-trade" onclick="saveTradeUrl()">Сохранить</button>
-        </div>
-      </div>
-
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <span style="font-family:var(--font-display); font-size:13px; font-weight:800;">МОИ ПРЕДМЕТЫ</span>
-        <button onclick="sellAllInventory()" style="background:none; border:none; color:var(--accent); font-size:11px; font-weight:800; cursor:pointer;">
-          💰 Продать всё на баланс
-        </button>
-      </div>
-
-      <div id="inventoryEmptyState" style="text-align:center; padding:40px 10px; color:var(--text-muted);">
-        <div style="font-size:40px; margin-bottom:10px;">🎒</div>
-        <div style="font-size:14px; font-weight:700; color:#fff;">Ваш инвентарь пуст</div>
-        <div style="font-size:11px; margin-top:4px;">Откройте кейс или купите скин в маркете!</div>
-      </div>
-
-      <div class="skins-grid" id="inventoryGrid"></div>
-    </div>
-
-    <!-- ==========================================
-         VIEW 4: CONTRACTS (TRADE-UP)
-         ========================================== -->
-    <div class="view-content" id="view-contracts">
-      <div class="contract-station">
-        <h3 style="font-family:var(--font-display); font-size:16px; margin-bottom:4px;">🧪 КОНТРАКТ ОБМЕНА CS2</h3>
-        <p style="font-size:11px; color:var(--text-muted);">Поместите 3 скина для шанса получить предмет следующей редкости (до x5 окупаемость)!</p>
-
-        <div class="contract-slots">
-          <div class="contract-slot" id="cslot-0" onclick="removeFromContract(0)">+</div>
-          <div class="contract-slot" id="cslot-1" onclick="removeFromContract(1)">+</div>
-          <div class="contract-slot" id="cslot-2" onclick="removeFromContract(2)">+</div>
-        </div>
-
-        <button class="btn-open-case" id="btnSignContract" onclick="signContract()" style="max-width:280px; margin:0 auto;">
-          ✍️ ПОДПИСАТЬ КОНТРАКТ
-        </button>
-      </div>
-
-      <div style="font-size:12px; font-weight:800; color:var(--text-muted); margin-bottom:8px;">
-        ДОСТУПНЫ ДЛЯ КОНТРАКТА ИЗ ВАШЕГО ИНВЕНТАРЯ:
-      </div>
-      <div class="skins-grid" id="contractAvailableGrid"></div>
-    </div>
-
+    <!-- Items Grid -->
+    <div class="items-grid" id="itemsGrid"></div>
   </div>
 
-  <!-- Bottom Floating Bar -->
+  <!-- Bottom Bar -->
   <div class="bottom-bar">
-    <div>
-      <div style="font-size:10px; color:var(--text-muted);">STEAM БОТ ВЫВОДА</div>
-      <div style="font-size:12px; font-weight:800; color:var(--green);">● Готов к обмену (0 сек)</div>
+    <div class="cart-info">
+      <span class="cart-label">В КОРЗИНЕ (<span id="cartCount">0</span>)</span>
+      <span class="cart-sum" id="cartTotalSum">0 ₽</span>
     </div>
-    <button class="btn-deposit" onclick="openDepositModal()">
-      <span>+ Пополнить</span>
+    <button class="btn-checkout" onclick="openCartModal()">
+      <span>Оформить</span> ➔
     </button>
   </div>
 
-  <!-- ==========================================
-       ROULETTE MODAL (CS2 OPENING SIMULATOR)
-       ========================================== -->
-  <div class="roulette-modal" id="rouletteModal">
-    <div class="roulette-box">
-      <button onclick="closeRouletteModal()" style="position:absolute; top:12px; right:14px; background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
-      
-      <h3 style="font-family:var(--font-display); font-size:16px; margin-bottom:2px;" id="rModalCaseTitle">КЕЙС «РЕВОЛЮЦИЯ CS2»</h3>
-      <p style="font-size:11px; color:var(--text-muted);">Испытайте удачу прямо сейчас</p>
+  <!-- MODAL: ADD / EDIT PRODUCT (ADMIN ONLY) -->
+  <div class="modal-overlay" id="modalProductForm" onclick="handleBackdropClick(event, 'modalProductForm')">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title" id="productModalTitle">ДОБАВИТЬ ТОВАР (АДМИН)</div>
+        <button class="modal-close" onclick="closeModal('modalProductForm')">✕</button>
+      </div>
 
-      <!-- Track Viewport -->
-      <div class="roulette-viewport">
-        <div class="roulette-pointer"></div>
-        <div class="roulette-ribbon" id="rouletteRibbon">
-          <!-- Slots injected by JS -->
+      <!-- File Upload to /api/upload -->
+      <div class="form-group">
+        <label class="form-label">Фото товара *</label>
+        <input type="file" id="inpFilePhoto" class="file-input-hidden" accept="image/*" onchange="handleServerFileUpload(event)">
+        
+        <div class="gallery-upload-box" onclick="document.getElementById('inpFilePhoto').click()">
+          <img id="uploadImgPreview" class="gallery-preview-img" alt="Предпросмотр">
+          <div id="uploadPrompt">
+            <div style="font-size:24px; margin-bottom:2px;">🖼️</div>
+            <div style="font-size:12px; font-weight:700; color:var(--text-main);">Выбрать фото для сервера</div>
+            <div style="font-size:10px; color:var(--text-muted);">JPG, PNG, WebP (загрузка на сервер)</div>
+          </div>
         </div>
       </div>
 
-      <!-- Win / Status Area -->
-      <div class="win-display-area">
-        <div id="rIdleText" style="font-size:13px; color:var(--text-muted); font-weight:700;">
-          Нажмите кнопку ниже для запуска!
+      <div class="form-group">
+        <label class="form-label">Название товара *</label>
+        <input type="text" id="inpProdName" class="form-input" placeholder="Название предмета, ключа или услуги">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Категория *</label>
+        <select id="inpProdCat" class="form-select"></select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Бейдж товара</label>
+        <select id="inpProdBadge" class="form-select">
+          <option value="">Авто (скидка) / Без бейджа</option>
+          <option value="hit">🔥 ХИТ</option>
+          <option value="sale">⚡ СКИДКА</option>
+          <option value="new">✨ NEW</option>
+          <option value="top">💎 ТОП</option>
+        </select>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">Цена со скидкой (₽) *</label>
+          <input type="number" id="inpProdPrice" class="form-input" placeholder="890">
         </div>
-        <div id="rWinResult" style="display:none;">
-          <div class="win-skin-title" id="rWonName">Butterfly Knife | Fade</div>
-          <div class="win-skin-price" id="rWonPrice">185,000 ₽</div>
+        <div class="form-group">
+          <label class="form-label">Старая цена до скидки (₽)</label>
+          <input type="number" id="inpProdOldPrice" class="form-input" placeholder="1200 (зачеркнется)">
         </div>
       </div>
 
-      <div style="display:flex; gap:8px; margin-top:14px;" id="rActionButtons">
-        <button class="btn-open-case" id="btnSpinNow" style="flex:1;" onclick="startRouletteSpin()">
-          🎲 КРУТИТЬ (290 ₽)
-        </button>
+      <div class="form-group">
+        <label class="form-label">Описание / Свойства</label>
+        <input type="text" id="inpProdDesc" class="form-input" placeholder="Напр. В наличии • Моментальная выдача">
       </div>
 
-      <div style="display:none; gap:8px; margin-top:14px;" id="rWonActions">
-        <button class="btn-card-action" style="flex:1; background:var(--green); color:#000;" onclick="claimWonItemToInventory()">
-          🎒 В инвентарь
-        </button>
-        <button class="btn-card-action" style="flex:1; background:rgba(255,255,255,0.1);" onclick="sellWonItemInstant()">
-          💰 Продать за 90%
-        </button>
-      </div>
+      <button class="btn-submit" id="btnSaveProductSubmit" onclick="saveProductForm()">СОХРАНИТЬ ТОВАР</button>
     </div>
   </div>
 
-  <!-- ==========================================
-       ITEM 3D / FLOAT WEAR INSPECTOR MODAL
-       ========================================== -->
-  <div class="item-modal" id="itemModal">
-    <div class="item-sheet">
-      <button onclick="closeItemModal()" style="float:right; background:rgba(255,255,255,0.1); border:none; color:#fff; width:30px; height:30px; border-radius:50%; font-size:14px; cursor:pointer;">✕</button>
-      
-      <div style="text-align:center; margin-bottom:14px;">
-        <img id="mInspectImg" src="" style="max-height:130px; object-fit:contain; filter:drop-shadow(0 10px 20px rgba(0,0,0,0.8));">
-        <h3 id="mInspectTitle" style="font-family:var(--font-display); font-size:18px; font-weight:800; margin-top:8px;">AK-47 | Bloodsport</h3>
-        <p id="mInspectRarity" style="font-size:11px; font-weight:700; color:var(--covert);">COVERT RIFLE</p>
+  <!-- MODAL: ADD CATEGORY (ADMIN ONLY) -->
+  <div class="modal-overlay" id="modalAddCat" onclick="handleBackdropClick(event, 'modalAddCat')">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">НОВАЯ КАТЕГОРИЯ (АДМИН)</div>
+        <button class="modal-close" onclick="closeModal('modalAddCat')">✕</button>
       </div>
 
-      <!-- Float Wear Slider -->
-      <div class="wear-bar-wrap">
-        <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700;">
-          <span>Float Value (Износ):</span>
-          <span id="mInspectFloatVal" style="color:var(--green); font-family:var(--font-mono);">0.08214 (MW)</span>
-        </div>
-        <div class="wear-track">
-          <div class="wear-needle" id="mInspectNeedle" style="left: 8%;"></div>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--text-muted);">
-          <span>FN 0.00</span>
-          <span>MW 0.07</span>
-          <span>FT 0.15</span>
-          <span>WW 0.38</span>
-          <span>BS 1.00</span>
-        </div>
+      <div class="form-group">
+        <label class="form-label">Название категории *</label>
+        <input type="text" id="inpCatName" class="form-input" placeholder="Напр. CS2, Dota 2, Brawl Stars, Ключи">
       </div>
 
-      <div style="background:rgba(255,255,255,0.03); border-radius:12px; padding:12px; font-size:12px; margin-bottom:16px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-          <span style="color:var(--text-muted);">Pattern Template:</span>
-          <span style="font-family:var(--font-mono); font-weight:700;" id="mInspectSeed">#541</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-          <span style="color:var(--text-muted);">Доставка в Steam:</span>
-          <span style="color:var(--green); font-weight:700;">Мгновенно через Trade Bot</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-size:15px; font-weight:900; margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08);">
-          <span>Цена покупки:</span>
-          <span id="mInspectPrice" style="color:var(--gold); font-family:var(--font-display);">11,500 ₽</span>
+      <div class="form-group">
+        <label class="form-label">Тип иконки</label>
+        <select id="inpCatIconType" class="form-select">
+          <option value="games">🎮 Игры</option>
+          <option value="key">🔑 Ключи</option>
+          <option value="gem">💎 Донат</option>
+          <option value="pass">🎫 Pass</option>
+          <option value="skin">🛡️ Предметы</option>
+          <option value="flash">⚡ Спецпредложения</option>
+        </select>
+      </div>
+
+      <button class="btn-submit" onclick="saveNewCategory()">СОЗДАТЬ КАТЕГОРИЮ</button>
+    </div>
+  </div>
+
+  <!-- MODAL: CART & CHECKOUT TO BOT -->
+  <div class="modal-overlay" id="modalCart" onclick="handleBackdropClick(event, 'modalCart')">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">🛒 ВАША КОРЗИНА</div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="btn-clear-cart" onclick="clearCart()" title="Очистить всю корзину">
+            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+            Очистить
+          </button>
+          <button class="modal-close" onclick="closeModal('modalCart')">✕</button>
         </div>
       </div>
 
-      <button class="btn-open-case" id="mInspectBuyBtn" style="padding:14px; font-size:14px;" onclick="buyCurrentInspectedSkin()">
-        ⚡ КУПИТЬ И ПОЛУЧИТЬ В STEAM
+      <div id="cartItemsList" style="margin-bottom:14px;"></div>
+
+      <div style="background:#0d0e12; border:1px solid var(--border-subtle); padding:14px; border-radius:var(--radius-md); margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:16px; font-weight:800;">
+          <span>Итого (расчет сервера):</span>
+          <span id="modalCartTotalSum" style="font-family:var(--font-display);">0 ₽</span>
+        </div>
+      </div>
+
+      <button class="btn-submit" onclick="proceedToBotOrder()">
+        ОФОРМИТЬ
       </button>
+    </div>
+  </div>
+
+  <!-- MODAL: SETTINGS (ADMIN ONLY) -->
+  <div class="modal-overlay" id="modalSettings" onclick="handleBackdropClick(event, 'modalSettings')">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">НАСТРОЙКИ МАГАЗИНА</div>
+        <button class="modal-close" onclick="closeModal('modalSettings')">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Telegram @username вашего БОТА для заказов *</label>
+        <input type="text" id="inpTgBotUsername" class="form-input" placeholder="Напр. NorvexShopBot">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Название магазина</label>
+        <input type="text" id="inpStoreTitle" class="form-input" placeholder="NORVEX SHOP">
+      </div>
+
+      <button class="btn-submit" onclick="saveSettings()">СОХРАНИТЬ НАСТРОЙКИ</button>
     </div>
   </div>
 
   <script>
     // ==========================================
-    // DATA & STATE
+    // XSS PROTECTION: HTML ESCAPING
     // ==========================================
-    let userBalance = 2450;
-    let currency = 'RUB'; // 'RUB' or 'STARS'
-    let soundEnabled = true;
-    let userInventory = [
-      { id: 101, name: "USP-S | Cortex", cat: "pistol", rarity: "rarity-classified", price: 650, float: 0.09, img: "https://images.unsplash.com/photo-1589241062272-c0a000072dfa?auto=format&fit=crop&w=300&q=80" },
-      { id: 102, name: "M4A4 | Evil Daimyo", cat: "rifle", rarity: "rarity-restricted", price: 290, float: 0.18, img: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=300&q=80" }
-    ];
-    let contractSlots = [null, null, null];
-    let activeInspectedSkin = null;
-
-    const skinsDatabase = [
-      { id: 1, name: "Butterfly Knife | Fade", cat: "knife", type: "Knife", rarity: "rarity-knife", priceRub: 185000, stars: 52000, float: 0.012, seed: 781, img: "https://images.unsplash.com/photo-1595590424283-b8f17842773f?auto=format&fit=crop&w=300&q=80" },
-      { id: 2, name: "Karambit | Doppler Phase 2", cat: "knife", type: "Knife", rarity: "rarity-knife", priceRub: 142000, stars: 40000, float: 0.008, seed: 194, img: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=300&q=80" },
-      { id: 3, name: "AK-47 | Bloodsport", cat: "rifle", type: "Rifle", rarity: "rarity-covert", priceRub: 11500, stars: 3200, float: 0.082, seed: 541, img: "https://images.unsplash.com/photo-1589241062272-c0a000072dfa?auto=format&fit=crop&w=300&q=80" },
-      { id: 4, name: "AWP | Printstream", cat: "sniper", type: "Sniper", rarity: "rarity-covert", priceRub: 16800, stars: 4700, float: 0.181, seed: 302, img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80" },
-      { id: 5, name: "M4A1-S | Hyper Beast", cat: "rifle", type: "Rifle", rarity: "rarity-covert", priceRub: 6400, stars: 1800, float: 0.142, seed: 88, img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=300&q=80" },
-      { id: 6, name: "Desert Eagle | Printstream", cat: "pistol", type: "Pistol", rarity: "rarity-classified", priceRub: 4800, stars: 1350, float: 0.065, seed: 440, img: "https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=300&q=80" },
-      { id: 7, name: "Arcana: Manifold Paradox (PA)", cat: "dota", type: "Dota 2", rarity: "rarity-classified", priceRub: 3800, stars: 1050, float: 0.00, seed: 1, img: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=300&q=80" },
-      { id: 8, name: "Arcana: Feast of Abscession (Pudge)", cat: "dota", type: "Dota 2", rarity: "rarity-classified", priceRub: 3450, stars: 980, float: 0.00, seed: 1, img: "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&w=300&q=80" }
-    ];
-
-    const casesData = [
-      { id: 'rev', name: "Кейс «Революция CS2»", price: 290, chance: "Шанс ножа: 1.5%", icon: "📦" },
-      { id: 'knives', name: "Кейс «Только Ножи ★»", price: 1490, chance: "Гарантированный нож!", icon: "🔪" },
-      { id: 'covert', name: "Кейс «Тайное & AWP»", price: 490, chance: "Шанс AWP Азимов: 18%", icon: "🔴" },
-      { id: 'dota', name: "Dota 2 Arcana Vault", price: 390, chance: "Шанс Арканы: 12%", icon: "🛡️" }
-    ];
-
-    // Web Audio Synthesizer for CS2 sounds
-    let audioCtx = null;
-    function playSound(type) {
-      if (!soundEnabled) return;
-      try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        if (type === 'tick') {
-          osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-          gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
-          osc.start();
-          osc.stop(audioCtx.currentTime + 0.04);
-        } else if (type === 'win') {
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
-          osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
-          osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
-          osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.3); // C6
-          gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.7);
-          osc.start();
-          osc.stop(audioCtx.currentTime + 0.7);
-        } else if (type === 'coin') {
-          osc.frequency.setValueAtTime(987.77, audioCtx.currentTime);
-          osc.frequency.setValueAtTime(1318.51, audioCtx.currentTime + 0.08);
-          gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
-          osc.start();
-          osc.stop(audioCtx.currentTime + 0.25);
-        }
-      } catch (e) {
-        // Audio fallback
-      }
-    }
-
-    function toggleAudio() {
-      soundEnabled = !soundEnabled;
-      document.getElementById('soundBtn').innerText = soundEnabled ? '🔊' : '🔇';
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
 
     // ==========================================
-    // INITIALIZATION & LIVE FEED
+    // VECTOR SVG ICONS
     // ==========================================
-    window.addEventListener('DOMContentLoaded', () => {
+    const SVG_ICONS = {
+      all: `<svg viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>`,
+      games: `<svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>`,
+      key: `<svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>`,
+      gem: `<svg viewBox="0 0 24 24"><path d="M19 3H5L2 9l10 12L22 9l-3-6zM9.62 8l1.5-3h1.76l1.5 3H9.62zM11 10v6.68L5.44 10H11zm2 0h5.56L13 16.68V10zm3.83-2h-2.22l-1.5-3h2.22l1.5 3zM7.39 5l1.5 3H6.67l-1.5-3h2.22z"/></svg>`,
+      pass: `<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>`,
+      skin: `<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>`,
+      flash: `<svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>`
+    };
+
+    // ==========================================
+    // TMA INITIALIZATION & API CLIENT
+    // ==========================================
+    const tgInitData = window.Telegram?.WebApp?.initData || '';
+    
+    try {
       if (window.Telegram?.WebApp) {
         window.Telegram.WebApp.ready();
         window.Telegram.WebApp.expand();
+        if (window.Telegram.WebApp.disableVerticalSwipes) {
+          window.Telegram.WebApp.disableVerticalSwipes();
+        }
       }
-      renderMarket(skinsDatabase);
-      renderCases();
-      renderInventory();
-      startLiveFeedSimulation();
-      updateBalanceUI();
-    });
+    } catch (e) {}
 
-    function startLiveFeedSimulation() {
-      const feed = document.getElementById('liveFeedTrack');
-      const sampleDrops = [
-        { name: "Karambit | Fade", cls: "gold", icon: "🔪", price: "145k ₽" },
-        { name: "AWP | Printstream", cls: "covert", icon: "🔴", price: "16.8k ₽" },
-        { name: "Arcana PA", cls: "covert", icon: "🛡️", price: "3.8k ₽" },
-        { name: "AK-47 | Bloodsport", cls: "covert", icon: "🔴", price: "11.5k ₽" },
-        { name: "USP-S | Cortex", cls: "", icon: "🟣", price: "650 ₽" }
-      ];
-
-      function updateFeed() {
-        feed.innerHTML = sampleDrops.map(d => `
-          <div class="live-item ${d.cls}">
-            <span>${d.icon}</span>
-            <span>${d.name}</span>
-            <span style="color:var(--green);">${d.price}</span>
-          </div>
-        `).join('');
+    async function apiFetch(url, options = {}) {
+      options.headers = options.headers || {};
+      if (tgInitData) {
+        options.headers['Authorization'] = `Bearer ${tgInitData}`;
       }
-      updateFeed();
-
-      setInterval(() => {
-        const randomSkin = skinsDatabase[Math.floor(Math.random() * skinsDatabase.length)];
-        sampleDrops.unshift({
-          name: randomSkin.name,
-          cls: randomSkin.rarity.includes('knife') ? 'gold' : 'covert',
-          icon: randomSkin.rarity.includes('knife') ? '🔪' : '🔴',
-          price: `${(randomSkin.priceRub / 1000).toFixed(1)}k ₽`
-        });
-        if (sampleDrops.length > 8) sampleDrops.pop();
-        updateFeed();
-      }, 4000);
+      const res = await fetch(url, options);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Ошибка сервера: ${res.status}`);
+      }
+      return res.json();
     }
 
     // ==========================================
-    // RENDER FUNCTIONS
+    // STATE
     // ==========================================
-    function renderMarket(items) {
-      const grid = document.getElementById('marketGrid');
-      grid.innerHTML = items.map(s => {
-        const displayPrice = currency === 'RUB' ? `${s.priceRub.toLocaleString()} ₽` : `${s.stars.toLocaleString()} ⭐`;
+    let categories = [];
+    let products = [];
+    let cart = JSON.parse(localStorage.getItem('norvex_client_cart') || '[]');
+    let activeCategory = 'all';
+    let uploadedServerImageUrl = '';
+    let editingProductId = null;
+    let isAdmin = false;
+    let tgBotHandle = 'NorvexShopBot';
+    let storeTitle = 'NORVEX SHOP';
+
+    function saveCartState() {
+      localStorage.setItem('norvex_client_cart', JSON.stringify(cart));
+    }
+
+    // ==========================================
+    // BOOTSTRAP: LOAD REAL DB STATE FROM SERVER
+    // ==========================================
+    async function loadBootstrap() {
+      try {
+        const data = await apiFetch('/api/bootstrap');
+        categories = data.categories || [];
+        products = data.products || [];
+        isAdmin = data.isAdmin || false;
+        storeTitle = data.storeTitle || 'NORVEX SHOP';
+        tgBotHandle = data.botHandle || 'NorvexShopBot';
+
+        document.getElementById('storeNameText').innerText = storeTitle;
+        if (isAdmin) {
+          document.body.classList.add('admin-mode');
+        } else {
+          document.body.classList.remove('admin-mode');
+        }
+
+        renderCategories();
+        renderProducts();
+        updateCartUI();
+      } catch (err) {
+        console.error("Bootstrap error:", err);
+      }
+    }
+
+    // ==========================================
+    // SERVER FILE UPLOAD
+    // ==========================================
+    window.handleServerFileUpload = async function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const promptEl = document.getElementById('uploadPrompt');
+        if (promptEl) promptEl.innerHTML = '<div style="font-size:12px; font-weight:700;">⏳ Загрузка на сервер...</div>';
+
+        const res = await apiFetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        uploadedServerImageUrl = res.url;
+        const imgEl = document.getElementById('uploadImgPreview');
+        imgEl.src = uploadedServerImageUrl;
+        imgEl.style.display = 'block';
+        if (promptEl) promptEl.style.display = 'none';
+      } catch (err) {
+        alert("Ошибка загрузки фото: " + err.message);
+        resetPhotoUpload();
+      }
+    };
+
+    function resetPhotoUpload(existingUrl = '') {
+      uploadedServerImageUrl = existingUrl;
+      const fileInp = document.getElementById('inpFilePhoto');
+      if (fileInp) fileInp.value = '';
+      const imgEl = document.getElementById('uploadImgPreview');
+      const promptEl = document.getElementById('uploadPrompt');
+      if (existingUrl) {
+        imgEl.src = existingUrl;
+        imgEl.style.display = 'block';
+        if (promptEl) promptEl.style.display = 'none';
+      } else {
+        imgEl.src = '';
+        imgEl.style.display = 'none';
+        if (promptEl) {
+          promptEl.innerHTML = `
+            <div style="font-size:24px; margin-bottom:2px;">🖼️</div>
+            <div style="font-size:12px; font-weight:700; color:var(--text-main);">Выбрать фото для сервера</div>
+            <div style="font-size:10px; color:var(--text-muted);">JPG, PNG, WebP (загрузка на сервер)</div>
+          `;
+          promptEl.style.display = 'block';
+        }
+      }
+    }
+
+    // ==========================================
+    // RENDERING & BADGES
+    // ==========================================
+    function getBadgeHtml(badge, price, oldPrice) {
+      if (badge === 'hit') return '<span class="item-promo-badge badge-hit">🔥 ХИТ</span>';
+      if (badge === 'sale') return '<span class="item-promo-badge badge-sale">⚡ СКИДКА</span>';
+      if (badge === 'new') return '<span class="item-promo-badge badge-new">✨ NEW</span>';
+      if (badge === 'top') return '<span class="item-promo-badge badge-top">💎 ТОП</span>';
+      
+      if (oldPrice && oldPrice > price) {
+        const pct = Math.round((1 - price / oldPrice) * 100);
+        return `<span class="item-promo-badge badge-sale">−${pct}%</span>`;
+      }
+      return '';
+    }
+
+    function renderCategories() {
+      const bar = document.getElementById('categoriesBar');
+      const select = document.getElementById('inpProdCat');
+      if (!bar) return;
+
+      let addCatBtnHtml = '';
+      if (isAdmin) {
+        addCatBtnHtml = `
+          <button class="cat-pill add-cat-btn" onclick="openAddCatModal()">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            Категория
+          </button>
+        `;
+      }
+
+      bar.innerHTML = categories.map(cat => {
+        const svgIcon = SVG_ICONS[cat.iconKey] || SVG_ICONS['games'];
+        const isAll = cat.id === 'all';
+        const deleteBtnHtml = (!isAll && isAdmin) ? `
+          <span class="btn-del-cat" onclick="event.stopPropagation(); deleteCategory('${escapeHtml(cat.id)}')" title="Удалить категорию">✕</span>
+        ` : '';
+
         return `
-          <div class="skin-card ${s.rarity}" onclick="openItemInspector(${s.id})">
-            <div class="skin-img-box">
-              <span class="float-mini-tag">Float ${s.float}</span>
-              <img src="${s.img}" alt="${s.name}" class="skin-img" loading="lazy">
+          <button class="cat-pill ${cat.id === activeCategory ? 'active' : ''}" onclick="selectCategory('${escapeHtml(cat.id)}')">
+            ${svgIcon} <span>${escapeHtml(cat.name)}</span>
+            ${deleteBtnHtml}
+          </button>
+        `;
+      }).join('') + addCatBtnHtml;
+
+      if (select) {
+        select.innerHTML = categories.filter(c => c.id !== 'all').map(c => `
+          <option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>
+        `).join('');
+      }
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('itemsGrid');
+      if (!grid) return;
+
+      const q = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+
+      let filtered = products;
+      if (activeCategory !== 'all') {
+        filtered = filtered.filter(p => p.catId === activeCategory);
+      }
+      if (q) {
+        filtered = filtered.filter(p => p.name.toLowerCase().includes(q) || (p.desc && p.desc.toLowerCase().includes(q)));
+      }
+
+      const gridCountEl = document.getElementById('gridCountLabel');
+      if (gridCountEl) gridCountEl.innerText = `КАТАЛОГ (${filtered.length})`;
+
+      const curCat = categories.find(c => c.id === activeCategory);
+      const activeCatNameEl = document.getElementById('activeCategoryName');
+      if (activeCatNameEl) activeCatNameEl.innerText = curCat ? curCat.name : 'Все товары';
+
+      if (filtered.length === 0) {
+        const adminAddBtn = isAdmin ? `
+          <button class="btn-add-item" style="display:inline-flex; padding:8px 16px; margin:0 auto;" onclick="openProductModal()">
+            + Добавить товар
+          </button>
+        ` : '';
+
+        grid.innerHTML = `
+          <div class="empty-state">
+            <div style="font-size:32px; margin-bottom:6px;">📦</div>
+            <div style="font-weight:700; font-size:14px; margin-bottom:4px;">Товаров пока нет</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">Каталог в данной категории пуст.</div>
+            ${adminAddBtn}
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => {
+        const catObj = categories.find(c => c.id === p.catId);
+        const catName = catObj ? catObj.name : 'Товар';
+        const hasDiscount = p.oldPrice && p.oldPrice > p.price;
+        const displayPrice = `${Number(p.price).toLocaleString()} ₽`;
+        const oldPriceHtml = hasDiscount ? `<span class="item-price-old">${Number(p.oldPrice).toLocaleString()} ₽</span>` : '';
+        const imgSrc = p.img || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=300&q=80';
+        const badgeHtml = getBadgeHtml(p.badge, p.price, p.oldPrice);
+
+        const cartItem = cart.find(c => String(c.id) === String(p.id));
+        const qty = cartItem ? (parseInt(cartItem.qty) || 0) : 0;
+
+        return `
+          <div class="item-card">
+            <div class="item-img-box">
+              <span class="item-category-tag">${escapeHtml(catName)}</span>
+              ${badgeHtml}
+              
+              <!-- Direct Admin Edit and Delete Actions -->
+              <div class="admin-card-actions admin-only">
+                <button class="btn-edit-item" onclick="event.stopPropagation(); openProductModal('${escapeHtml(p.id)}')" title="Редактировать товар">✏️</button>
+                <button class="btn-delete-item" onclick="event.stopPropagation(); deleteProduct('${escapeHtml(p.id)}')" title="Удалить товар">✕</button>
+              </div>
+
+              <img src="${escapeHtml(imgSrc)}" class="item-img" loading="lazy">
             </div>
-            <div class="skin-name">${s.name}</div>
-            <div class="skin-sub">
-              <span>${s.type}</span>
-              <span style="color:var(--text-muted);">#${s.seed}</span>
-            </div>
-            <div class="skin-card-footer">
-              <div class="skin-price">${displayPrice}</div>
-              <button class="btn-card-action" onclick="event.stopPropagation(); buySkinDirect(${s.id})">Купить</button>
+            <div class="item-name">${escapeHtml(p.name)}</div>
+            <div class="item-desc">${escapeHtml(p.desc || 'В наличии')}</div>
+            <div class="item-footer">
+              <div class="item-price-wrap">
+                ${oldPriceHtml}
+                <div class="item-price">${displayPrice}</div>
+              </div>
+              
+              <div class="card-cart-controls">
+                ${qty > 0 ? `
+                  <button class="btn-qty" onclick="event.stopPropagation(); changeQty('${escapeHtml(p.id)}', -1)">−</button>
+                  <span class="qty-display">${qty}</span>
+                  <button class="btn-qty" onclick="event.stopPropagation(); changeQty('${escapeHtml(p.id)}', 1)">+</button>
+                ` : `
+                  <button class="btn-first-add" onclick="event.stopPropagation(); changeQty('${escapeHtml(p.id)}', 1)">+ В корзину</button>
+                `}
+              </div>
             </div>
           </div>
         `;
       }).join('');
     }
 
-    function renderCases() {
-      const grid = document.getElementById('casesGrid');
-      grid.innerHTML = casesData.map(c => `
-        <div class="case-box-card" onclick="openCaseRoulette('${c.id}')">
-          <div class="case-icon-anim">${c.icon}</div>
-          <div class="case-title">${c.name}</div>
-          <div class="case-chance">${c.chance}</div>
-          <button class="btn-open-case">ОТКРЫТЬ (${c.price} ₽)</button>
-        </div>
-      `).join('');
-    }
-
-    function renderInventory() {
-      const grid = document.getElementById('inventoryGrid');
-      const empty = document.getElementById('inventoryEmptyState');
-      document.getElementById('navInvCount').innerText = userInventory.length;
-
-      if (userInventory.length === 0) {
-        grid.innerHTML = '';
-        empty.style.display = 'block';
-        return;
-      }
-
-      empty.style.display = 'none';
-      grid.innerHTML = userInventory.map((item, idx) => `
-        <div class="skin-card ${item.rarity}">
-          <div class="skin-img-box">
-            <span class="float-mini-tag">Float ${item.float}</span>
-            <img src="${item.img}" class="skin-img">
-          </div>
-          <div class="skin-name">${item.name}</div>
-          <div class="skin-sub">
-            <span>Инвентарь</span>
-            <span style="color:var(--green); font-weight:700;">${item.price} ₽</span>
-          </div>
-          <div class="skin-card-footer">
-            <button class="btn-card-action" style="background:var(--green); color:#000; flex:1; margin-right:4px;" onclick="withdrawSkinSteam(${idx})">Вывести</button>
-            <button class="btn-card-action" style="background:rgba(255,255,255,0.1); flex:1;" onclick="sellInventoryItem(${idx})">Продать</button>
-          </div>
-        </div>
-      `).join('');
-
-      renderContractAvailable();
-    }
-
-    function renderContractAvailable() {
-      const grid = document.getElementById('contractAvailableGrid');
-      grid.innerHTML = userInventory.map((item, idx) => `
-        <div class="skin-card ${item.rarity}" onclick="addToContract(${idx})">
-          <div class="skin-img-box">
-            <img src="${item.img}" class="skin-img">
-          </div>
-          <div class="skin-name">${item.name}</div>
-          <div class="skin-card-footer">
-            <span class="skin-price">${item.price} ₽</span>
-            <button class="btn-card-action">+ В контракт</button>
-          </div>
-        </div>
-      `).join('');
-    }
+    window.selectCategory = function(catId) {
+      activeCategory = catId;
+      renderCategories();
+      renderProducts();
+    };
 
     // ==========================================
-    // NAVIGATION & FILTERS
+    // CART MANAGEMENT
     // ==========================================
-    function switchNav(viewName, btn) {
-      document.querySelectorAll('.p-nav-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
-      document.getElementById(`view-${viewName}`).classList.add('active');
-      playSound('tick');
-    }
+    window.changeQty = function(productId, delta) {
+      const pId = String(productId);
+      const existingIndex = cart.findIndex(c => String(c.id) === pId);
 
-    function filterTag(cat, btn) {
-      document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      if (cat === 'all') {
-        renderMarket(skinsDatabase);
-      } else {
-        renderMarket(skinsDatabase.filter(s => s.cat === cat));
-      }
-    }
-
-    document.getElementById('marketSearchInput').addEventListener('input', (e) => {
-      const q = e.target.value.toLowerCase();
-      renderMarket(skinsDatabase.filter(s => s.name.toLowerCase().includes(q) || s.type.toLowerCase().includes(q)));
-    });
-
-    function toggleCurrency() {
-      currency = currency === 'RUB' ? 'STARS' : 'RUB';
-      updateBalanceUI();
-      renderMarket(skinsDatabase);
-    }
-
-    function updateBalanceUI() {
-      document.getElementById('headerBalanceText').innerText = currency === 'RUB' ? `${userBalance.toLocaleString()} ₽` : `${Math.round(userBalance / 3.5)} ⭐`;
-    }
-
-    // ==========================================
-    // ACTIONS & STEAM TRADE
-    // ==========================================
-    function openItemInspector(id) {
-      const skin = skinsDatabase.find(s => s.id === id);
-      if (!skin) return;
-      activeInspectedSkin = skin;
-
-      document.getElementById('mInspectImg').src = skin.img;
-      document.getElementById('mInspectTitle').innerText = skin.name;
-      document.getElementById('mInspectRarity').innerText = skin.rarity.toUpperCase();
-      document.getElementById('mInspectFloatVal').innerText = `${skin.float} (FN/MW)`;
-      document.getElementById('mInspectNeedle').style.left = `${skin.float * 100}%`;
-      document.getElementById('mInspectSeed').innerText = `#${skin.seed}`;
-      document.getElementById('mInspectPrice').innerText = `${skin.priceRub.toLocaleString()} ₽ (${skin.stars} ⭐)`;
-
-      document.getElementById('itemModal').style.display = 'flex';
-      playSound('tick');
-    }
-
-    function closeItemModal() {
-      document.getElementById('itemModal').style.display = 'none';
-    }
-
-    function buyCurrentInspectedSkin() {
-      if (activeInspectedSkin) {
-        buySkinDirect(activeInspectedSkin.id);
-        closeItemModal();
-      }
-    }
-
-    function buySkinDirect(id) {
-      const skin = skinsDatabase.find(s => s.id === id);
-      if (!skin) return;
-
-      if (userBalance < skin.priceRub) {
-        if (confirm(`Недостаточно средств на балансе! Пополнить ${skin.priceRub - userBalance} ₽ через Telegram Stars или Карту?`)) {
-          openDepositModal();
+      if (existingIndex !== -1) {
+        const newQty = (parseInt(cart[existingIndex].qty) || 0) + delta;
+        if (newQty <= 0) {
+          cart.splice(existingIndex, 1);
+        } else {
+          cart[existingIndex].qty = newQty;
         }
-        return;
-      }
-
-      userBalance -= skin.priceRub;
-      updateBalanceUI();
-      userInventory.push({
-        id: Date.now(),
-        name: skin.name,
-        cat: skin.cat,
-        rarity: skin.rarity,
-        price: skin.priceRub,
-        float: skin.float,
-        img: skin.img
-      });
-      renderInventory();
-      playSound('coin');
-
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-      }
-
-      alert(`✅ Покупка «${skin.name}» успешна!\nПредмет добавлен в ваш инвентарь.`);
-    }
-
-    function withdrawSkinSteam(idx) {
-      const item = userInventory[idx];
-      const tradeUrl = document.getElementById('tradeUrlInput').value.trim();
-
-      if (!tradeUrl) {
-        alert("⚠️ Пожалуйста, укажите ваш Steam Trade-URL в поле выше!");
-        document.getElementById('tradeUrlInput').focus();
-        return;
-      }
-
-      if (confirm(`Отправить «${item.name}» обменом в Steam?\nTrade Link: ${tradeUrl}`)) {
-        userInventory.splice(idx, 1);
-        renderInventory();
-        if (window.Telegram?.WebApp?.HapticFeedback) {
-          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      } else if (delta > 0) {
+        const prod = products.find(p => String(p.id) === pId);
+        if (prod) {
+          cart.push({
+            id: pId,
+            name: prod.name,
+            price: parseInt(prod.price) || 0,
+            img: prod.img || '',
+            qty: 1
+          });
         }
-        alert(`🚀 Запрос на обмен в Steam отправлен!\nБот отправил трейд. Примите его в Steam Guard в течение 5 минут.`);
       }
-    }
 
-    function sellInventoryItem(idx) {
-      const item = userInventory[idx];
-      userBalance += item.price;
-      userInventory.splice(idx, 1);
-      updateBalanceUI();
-      renderInventory();
-      playSound('coin');
-    }
+      saveCartState();
+      renderProducts();
+      updateCartUI();
+      renderCartModalList();
 
-    function sellAllInventory() {
-      if (userInventory.length === 0) return;
-      const total = userInventory.reduce((s, i) => s + i.price, 0);
-      if (confirm(`Продать все (${userInventory.length}) предметов на баланс за ${total.toLocaleString()} ₽?`)) {
-        userBalance += total;
-        userInventory = [];
-        updateBalanceUI();
-        renderInventory();
-        playSound('coin');
+      try {
+        if (window.Telegram?.WebApp?.HapticFeedback?.impactOccurred) {
+          window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+        }
+      } catch (e) {}
+    };
+
+    window.clearCart = function() {
+      if (!cart || cart.length === 0) {
+        alert("Корзина уже пуста!");
+        return;
       }
+      cart = [];
+      saveCartState();
+      renderProducts();
+      updateCartUI();
+      renderCartModalList();
+      closeModal('modalCart');
+    };
+
+    function updateCartUI() {
+      const totalCount = cart.reduce((sum, item) => sum + (parseInt(item.qty) || 0), 0);
+      const totalRub = cart.reduce((sum, item) => sum + ((parseInt(item.price) || 0) * (parseInt(item.qty) || 0)), 0);
+
+      const countEl = document.getElementById('cartCount');
+      const sumEl = document.getElementById('cartTotalSum');
+      const modalSumEl = document.getElementById('modalCartTotalSum');
+
+      if (countEl) countEl.innerText = totalCount;
+      if (sumEl) sumEl.innerText = `${totalRub.toLocaleString()} ₽`;
+      if (modalSumEl) modalSumEl.innerText = `${totalRub.toLocaleString()} ₽`;
     }
 
-    function saveTradeUrl() {
-      const val = document.getElementById('tradeUrlInput').value.trim();
-      if (val.includes('partner=') && val.includes('token=')) {
-        alert("✅ Steam Trade-URL успешно сохранен и верифицирован ботом!");
-      } else {
-        alert("⚠️ Введите корректный URL обмена Steam формата:\nhttps://steamcommunity.com/tradeoffer/new/?partner=...&token=...");
-      }
-    }
+    function renderCartModalList() {
+      const list = document.getElementById('cartItemsList');
+      if (!list) return;
 
-    function openDepositModal() {
-      const sum = prompt("Введите сумму пополнения баланса в рублях (₽):", "1000");
-      if (sum && !isNaN(sum)) {
-        userBalance += parseInt(sum);
-        updateBalanceUI();
-        playSound('coin');
-        alert(`✅ Баланс успешно пополнен на ${sum} ₽!`);
-      }
-    }
-
-    // ==========================================
-    // ROULETTE & CASE OPENING SIMULATION
-    // ==========================================
-    let currentCaseOpening = null;
-    let rouletteWinningItem = null;
-
-    function openCaseRoulette(caseId) {
-      const c = casesData.find(x => x.id === caseId);
-      currentCaseOpening = c;
-
-      document.getElementById('rModalCaseTitle').innerText = c.name;
-      document.getElementById('btnSpinNow').innerText = `🎲 КРУТИТЬ (${c.price} ₽)`;
-      document.getElementById('rIdleText').style.display = 'block';
-      document.getElementById('rWinResult').style.display = 'none';
-      document.getElementById('rActionButtons').style.display = 'flex';
-      document.getElementById('rWonActions').style.display = 'none';
-
-      buildRouletteRibbon();
-      document.getElementById('rouletteModal').style.display = 'flex';
-      playSound('tick');
-    }
-
-    function closeRouletteModal() {
-      document.getElementById('rouletteModal').style.display = 'none';
-    }
-
-    function buildRouletteRibbon() {
-      const ribbon = document.getElementById('rouletteRibbon');
-      ribbon.style.transition = 'none';
-      ribbon.style.transform = 'translateX(0px)';
-
-      let slotsHtml = '';
-      for (let i = 0; i < 50; i++) {
-        const randomSkin = skinsDatabase[Math.floor(Math.random() * skinsDatabase.length)];
-        slotsHtml += `
-          <div class="roulette-slot" id="rslot-${i}">
-            <img src="${randomSkin.img}" class="roulette-slot-img">
-            <div class="roulette-slot-name">${randomSkin.name}</div>
+      if (!cart || cart.length === 0) {
+        list.innerHTML = `
+          <div style="text-align:center; padding:20px 0; color:var(--text-muted); font-size:13px;">
+            Корзина пуста
           </div>
         `;
-      }
-      ribbon.innerHTML = slotsHtml;
-    }
-
-    function startRouletteSpin() {
-      if (userBalance < currentCaseOpening.price) {
-        alert("Недостаточно средств на балансе! Пополните баланс.");
         return;
       }
 
-      userBalance -= currentCaseOpening.price;
-      updateBalanceUI();
+      list.innerHTML = cart.map(item => {
+        const itemPrice = parseInt(item.price) || 0;
+        const itemQty = parseInt(item.qty) || 0;
+        const subtotal = itemPrice * itemQty;
+        const imgSrc = item.img || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=300&q=80';
 
-      const btn = document.getElementById('btnSpinNow');
-      btn.disabled = true;
+        return `
+          <div class="cart-row-item">
+            <div class="cart-row-left">
+              <img src="${escapeHtml(imgSrc)}" class="cart-row-img">
+              <div class="cart-row-info">
+                <div class="cart-row-title">${escapeHtml(item.name)}</div>
+                <div class="cart-row-sub">${itemPrice.toLocaleString()} ₽ × ${itemQty} шт. = ${subtotal.toLocaleString()} ₽</div>
+              </div>
+            </div>
+            <div class="card-cart-controls" style="margin-left:8px;">
+              <button class="btn-qty" onclick="event.stopPropagation(); changeQty('${escapeHtml(item.id)}', -1)">−</button>
+              <span class="qty-display">${itemQty}</span>
+              <button class="btn-qty" onclick="event.stopPropagation(); changeQty('${escapeHtml(item.id)}', 1)">+</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
 
-      // Pick winner
-      const winIndex = 38; // target slot
-      rouletteWinningItem = skinsDatabase[Math.floor(Math.random() * skinsDatabase.length)];
-      
-      const targetSlot = document.getElementById(`rslot-${winIndex}`);
-      targetSlot.querySelector('img').src = rouletteWinningItem.img;
-      targetSlot.querySelector('.roulette-slot-name').innerText = rouletteWinningItem.name;
+    window.openCartModal = function() {
+      if (cart.length === 0) {
+        alert("Корзина пуста! Добавьте товары кнопкой [+ В корзину]");
+        return;
+      }
 
-      const ribbon = document.getElementById('rouletteRibbon');
-      const slotWidth = 100;
-      const targetOffset = (winIndex * slotWidth) - 170 + Math.floor(Math.random() * 40);
+      renderCartModalList();
+      updateCartUI();
+      document.getElementById('modalCart').style.display = 'flex';
+    };
 
-      // Play tick sounds as it spins
-      let tickCount = 0;
-      const tickInterval = setInterval(() => {
-        playSound('tick');
-        tickCount++;
-        if (tickCount > 25) clearInterval(tickInterval);
-      }, 120);
+    // ==========================================
+    // SECURE ORDER DISPATCH (PRICE TAMPERING PROTECTED)
+    // ==========================================
+    window.proceedToBotOrder = async function() {
+      if (cart.length === 0) return;
 
-      ribbon.style.transition = 'transform 4.5s cubic-bezier(0.1, 0.95, 0.2, 1)';
-      ribbon.style.transform = `translateX(-${targetOffset}px)`;
+      try {
+        // Send ONLY item IDs and quantities to server
+        const payload = {
+          items: cart.map(i => ({ id: String(i.id), qty: parseInt(i.qty) || 1 }))
+        };
 
-      setTimeout(() => {
-        targetSlot.classList.add('won-active');
-        playSound('win');
-        if (window.Telegram?.WebApp?.HapticFeedback) {
-          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        const res = await apiFetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        cart = [];
+        saveCartState();
+        updateCartUI();
+        closeModal('modalCart');
+
+        alert(`✅ Заказ #${res.order.orderId} оформлен на сумму ${res.order.totalRub.toLocaleString()} ₽\nДетали отправили в чат бота`);
+        
+        try {
+          if (window.Telegram?.WebApp?.close) {
+            window.Telegram.WebApp.close();
+          }
+        } catch(e) {}
+
+      } catch (err) {
+        alert("Ошибка оформления заказа: " + err.message);
+      }
+    };
+
+    // ==========================================
+    // ADMIN ACTIONS: ADD / EDIT PRODUCT & CATEGORY
+    // ==========================================
+    window.openProductModal = function(productId = null) {
+      if (!isAdmin) return;
+
+      if (categories.filter(c => c.id !== 'all').length === 0) {
+        alert("Сначала создайте категорию кнопкой [+ Категория]!");
+        openAddCatModal();
+        return;
+      }
+
+      editingProductId = productId;
+
+      if (productId) {
+        const prod = products.find(p => String(p.id) === String(productId));
+        if (!prod) return;
+
+        document.getElementById('productModalTitle').innerText = "РЕДАКТИРОВАТЬ ТОВАР (АДМИН)";
+        document.getElementById('btnSaveProductSubmit').innerText = "СОХРАНИТЬ ИЗМЕНЕНИЯ";
+        document.getElementById('inpProdName').value = prod.name;
+        document.getElementById('inpProdCat').value = prod.catId;
+        document.getElementById('inpProdBadge').value = prod.badge || '';
+        document.getElementById('inpProdPrice').value = prod.price;
+        document.getElementById('inpProdOldPrice').value = prod.oldPrice || '';
+        document.getElementById('inpProdDesc').value = prod.desc || '';
+        resetPhotoUpload(prod.img || '');
+      } else {
+        document.getElementById('productModalTitle').innerText = "ДОБАВИТЬ ТОВАР (АДМИН)";
+        document.getElementById('btnSaveProductSubmit').innerText = "СОХРАНИТЬ ТОВАР";
+        document.getElementById('inpProdName').value = '';
+        if (activeCategory !== 'all') {
+          document.getElementById('inpProdCat').value = activeCategory;
         }
+        document.getElementById('inpProdBadge').value = '';
+        document.getElementById('inpProdPrice').value = '';
+        document.getElementById('inpProdOldPrice').value = '';
+        document.getElementById('inpProdDesc').value = '';
+        resetPhotoUpload('');
+      }
 
-        document.getElementById('rIdleText').style.display = 'none';
-        document.getElementById('rWinResult').style.display = 'block';
-        document.getElementById('rWonName').innerText = rouletteWinningItem.name;
-        document.getElementById('rWonPrice').innerText = `${rouletteWinningItem.priceRub.toLocaleString()} ₽`;
+      document.getElementById('modalProductForm').style.display = 'flex';
+    };
 
-        document.getElementById('rActionButtons').style.display = 'none';
-        document.getElementById('rWonActions').style.display = 'flex';
-        btn.disabled = false;
-      }, 4600);
-    }
+    window.saveProductForm = async function() {
+      const name = document.getElementById('inpProdName').value.trim();
+      const catId = document.getElementById('inpProdCat').value || 'keys';
+      const badge = document.getElementById('inpProdBadge').value;
+      const price = parseInt(document.getElementById('inpProdPrice').value) || 0;
+      const oldPrice = parseInt(document.getElementById('inpProdOldPrice').value) || 0;
+      const desc = document.getElementById('inpProdDesc').value.trim();
 
-    function claimWonItemToInventory() {
-      if (!rouletteWinningItem) return;
-      userInventory.push({
-        id: Date.now(),
-        name: rouletteWinningItem.name,
-        cat: rouletteWinningItem.cat,
-        rarity: rouletteWinningItem.rarity,
-        price: rouletteWinningItem.priceRub,
-        float: rouletteWinningItem.float,
-        img: rouletteWinningItem.img
-      });
-      renderInventory();
-      closeRouletteModal();
-      playSound('coin');
-      alert(`🎉 Предмет «${rouletteWinningItem.name}» отправлен в ваш инвентарь!`);
-    }
-
-    function sellWonItemInstant() {
-      if (!rouletteWinningItem) return;
-      const sellPrice = Math.round(rouletteWinningItem.priceRub * 0.9);
-      userBalance += sellPrice;
-      updateBalanceUI();
-      closeRouletteModal();
-      playSound('coin');
-      alert(`💰 Предмет продан за ${sellPrice.toLocaleString()} ₽! Средства зачислены.`);
-    }
-
-    // ==========================================
-    // TRADE-UP CONTRACTS
-    // ==========================================
-    function addToContract(invIdx) {
-      const item = userInventory[invIdx];
-      const emptySlotIdx = contractSlots.findIndex(s => s === null);
-      if (emptySlotIdx === -1) {
-        alert("Все 3 слота контракта заполнены!");
+      if (!name || price <= 0) {
+        alert("Пожалуйста, укажите название и цену товара!");
         return;
       }
-      contractSlots[emptySlotIdx] = item;
-      userInventory.splice(invIdx, 1);
-      updateContractUI();
-      renderInventory();
-      playSound('tick');
-    }
 
-    function removeFromContract(slotIdx) {
-      if (contractSlots[slotIdx]) {
-        userInventory.push(contractSlots[slotIdx]);
-        contractSlots[slotIdx] = null;
-        updateContractUI();
-        renderInventory();
-        playSound('tick');
-      }
-    }
+      const payload = {
+        name,
+        catId,
+        badge,
+        price,
+        oldPrice,
+        desc,
+        img: uploadedServerImageUrl
+      };
 
-    function updateContractUI() {
-      contractSlots.forEach((item, idx) => {
-        const slotEl = document.getElementById(`cslot-${idx}`);
-        if (item) {
-          slotEl.classList.add('filled');
-          slotEl.innerHTML = `<img src="${item.img}" style="max-width:40px; max-height:35px;">`;
+      try {
+        if (editingProductId) {
+          await apiFetch(`/api/products/${editingProductId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
         } else {
-          slotEl.classList.remove('filled');
-          slotEl.innerText = '+';
+          await apiFetch('/api/products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
         }
-      });
-    }
 
-    function signContract() {
-      const filled = contractSlots.filter(s => s !== null);
-      if (filled.length < 3) {
-        alert("Для подписания контракта необходимо заполнить все 3 слота!");
+        await loadBootstrap();
+        closeModal('modalProductForm');
+      } catch (err) {
+        alert("Ошибка сохранения товара: " + err.message);
+      } finally {
+        editingProductId = null;
+      }
+    };
+
+    window.deleteProduct = async function(id) {
+      if (!confirm("Удалить этот товар из каталога на сервере?")) return;
+      try {
+        await apiFetch(`/api/products/${id}`, { method: 'DELETE' });
+        cart = cart.filter(p => String(p.id) !== String(id));
+        saveCartState();
+        await loadBootstrap();
+      } catch (err) {
+        alert("Ошибка удаления товара: " + err.message);
+      }
+    };
+
+    window.openAddCatModal = function() {
+      if (!isAdmin) return;
+      document.getElementById('inpCatName').value = '';
+      document.getElementById('modalAddCat').style.display = 'flex';
+    };
+
+    window.saveNewCategory = async function() {
+      const name = document.getElementById('inpCatName').value.trim();
+      const iconKey = document.getElementById('inpCatIconType').value || 'games';
+      if (!name) {
+        alert("Введите название категории!");
         return;
       }
 
-      // Upgrade reward
-      const upgradePool = skinsDatabase.filter(s => s.rarity.includes('covert') || s.rarity.includes('knife'));
-      const wonReward = upgradePool[Math.floor(Math.random() * upgradePool.length)];
-
-      contractSlots = [null, null, null];
-      updateContractUI();
-
-      userInventory.push({
-        id: Date.now(),
-        name: wonReward.name,
-        cat: wonReward.cat,
-        rarity: wonReward.rarity,
-        price: wonReward.priceRub,
-        float: wonReward.float,
-        img: wonReward.img
-      });
-      renderInventory();
-      playSound('win');
-
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      try {
+        await apiFetch('/api/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, iconKey })
+        });
+        await loadBootstrap();
+        closeModal('modalAddCat');
+      } catch (err) {
+        alert("Ошибка создания категории: " + err.message);
       }
+    };
 
-      alert(`🎉 КОНТРАКТ ВЫПОЛНЕН!\n\nВы получили: «${wonReward.name}» стоимостью ${wonReward.priceRub.toLocaleString()} ₽!`);
-    }
+    window.deleteCategory = async function(catId) {
+      if (!confirm("Удалить категорию с сервера?")) return;
+      try {
+        await apiFetch(`/api/categories/${catId}`, { method: 'DELETE' });
+        if (activeCategory === catId) activeCategory = 'all';
+        await loadBootstrap();
+      } catch (err) {
+        alert("Ошибка удаления категории: " + err.message);
+      }
+    };
+
+    window.openSettingsModal = function() {
+      document.getElementById('inpTgBotUsername').value = tgBotHandle;
+      document.getElementById('inpStoreTitle').value = storeTitle;
+      document.getElementById('modalSettings').style.display = 'flex';
+    };
+
+    window.saveSettings = async function() {
+      const botUsername = document.getElementById('inpTgBotUsername').value.trim().replace('@', '');
+      const title = document.getElementById('inpStoreTitle').value.trim();
+
+      try {
+        await apiFetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ botUsername, storeTitle: title })
+        });
+        await loadBootstrap();
+        closeModal('modalSettings');
+        alert("✅ Настройки сохранены на сервере!");
+      } catch (err) {
+        alert("Ошибка сохранения настроек: " + err.message);
+      }
+    };
+
+    window.closeModal = function(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    };
+
+    window.handleBackdropClick = function(event, modalId) {
+      if (event.target === document.getElementById(modalId)) {
+        closeModal(modalId);
+      }
+    };
+
+    document.getElementById('searchInput')?.addEventListener('input', () => {
+      renderProducts();
+    });
+
+    // Start App
+    loadBootstrap();
   </script>
 </body>
 </html>
