@@ -31,10 +31,10 @@ if os.path.exists(env_path):
                 os.environ[k.strip()] = v.strip().strip('"').strip("'")
 
 # конфиг и переменные
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
-ADMIN_IDS_RAW = os.environ.get("ADMIN_IDS", "")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "").strip()
+ADMIN_IDS_RAW = os.environ.get("ADMIN_IDS", "").strip()
 ADMIN_IDS = [a.strip() for a in ADMIN_IDS_RAW.split(",") if a.strip()]
-WEBAPP_URL = os.environ.get("WEBAPP_URL", "https://shopik234.vercel.app")
+WEBAPP_URL = os.environ.get("WEBAPP_URL", "https://shopik234.vercel.app").strip()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
@@ -512,8 +512,8 @@ async def delete_promo_endpoint(code: str, admin: Dict[str, Any] = Depends(requi
 # --- АДМИНКА: РАССЫЛКА ПО БАЗЕ ПОЛЬЗОВАТЕЛЕЙ ---
 @router.post("/admin/broadcast")
 async def broadcast_message(payload: BroadcastRequest, admin: Dict[str, Any] = Depends(require_admin)):
-    if not BOT_TOKEN or "YOUR_BOT_TOKEN" in BOT_TOKEN:
-        raise HTTPException(status_code=400, detail="Токен бота не настроен")
+    if not BOT_TOKEN:
+        raise HTTPException(status_code=400, detail="Токен бота не настроен в переменных окружения")
 
     users = db.get_all_bot_users()
     if not users:
@@ -688,7 +688,7 @@ def notify_order_paid(order_code: str, payment_source: str, payment_id: Optional
             reward = int(round(total_rub * (ref_percent / 100.0)))
             if reward > 0:
                 db.add_referral_bonus(referrer_id, reward)
-                if BOT_TOKEN and "YOUR_BOT_TOKEN" not in BOT_TOKEN:
+                if BOT_TOKEN:
                     try:
                         import telebot
                         tg_bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
@@ -701,7 +701,7 @@ def notify_order_paid(order_code: str, payment_source: str, payment_id: Optional
                     except Exception:
                         pass
 
-    if not BOT_TOKEN or "YOUR_BOT_TOKEN" in BOT_TOKEN:
+    if not BOT_TOKEN:
         return
 
     try:
@@ -754,7 +754,7 @@ def notify_order_paid(order_code: str, payment_source: str, payment_id: Optional
 # обработка вебхука бота (включая Stars и /start ref_...)
 @router.post("/webhook")
 async def telegram_webhook(request: Request):
-    if not BOT_TOKEN or "YOUR_BOT_TOKEN" in BOT_TOKEN:
+    if not BOT_TOKEN:
         return {"ok": False, "error": "нет токена бота"}
 
     try:
@@ -825,7 +825,7 @@ async def telegram_webhook(request: Request):
 
 # отправка чеков и уведомлений о новом заказе
 def send_order_bot_notifications(order_data: Dict[str, Any], verified_items: List[Dict[str, Any]], payment_result: Dict[str, Any]):
-    if not BOT_TOKEN or "YOUR_BOT_TOKEN" in BOT_TOKEN:
+    if not BOT_TOKEN:
         return
 
     try:
@@ -914,7 +914,7 @@ def send_order_bot_notifications(order_data: Dict[str, Any], verified_items: Lis
 
 # локальный поллинг бота при разработке
 def run_bot_listener():
-    if not BOT_TOKEN or "YOUR_BOT_TOKEN" in BOT_TOKEN:
+    if not BOT_TOKEN:
         return
 
     try:

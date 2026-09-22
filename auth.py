@@ -7,7 +7,7 @@ from typing import Optional, Dict, Any
 
 # проверка подписи телеграм через hmac sha256
 def validate_telegram_init_data(init_data: str, bot_token: str, admin_ids: list, max_age_seconds: int = 604800) -> Optional[Dict[str, Any]]:
-    if not init_data or not bot_token or bot_token.startswith("YOUR_"):
+    if not init_data or not bot_token:
         return None
 
     try:
