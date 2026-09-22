@@ -15,23 +15,29 @@
 
   <style>
     :root {
-      --bg-primary: #0a0b0e;
-      --bg-surface: #12141a;
-      --bg-surface-elevated: #1a1d26;
-      --accent: #00e699;
-      --accent-hover: #00c784;
-      --accent-dark: #003322;
-      --accent-glow: rgba(0, 230, 153, 0.25);
-      --text-main: #ffffff;
-      --text-secondary: #a0a6b8;
-      --text-muted: #5e6578;
-      --border-subtle: rgba(255, 255, 255, 0.06);
+      --bg-base: #070709;
+      --bg-surface: #0f1015;
+      --bg-surface-elevated: #161820;
+      --bg-glass: rgba(18, 20, 28, 0.78);
+      
+      --accent: #10b981;
+      --accent-bright: #00e699;
+      --accent-glow: rgba(16, 185, 129, 0.2);
+      --accent-subtle: rgba(16, 185, 129, 0.1);
+      
+      --text-main: #f5f5f7;
+      --text-secondary: #9aa0b0;
+      --text-muted: #585d6e;
+      
+      --border-subtle: rgba(255, 255, 255, 0.07);
       --border-medium: rgba(255, 255, 255, 0.12);
-      --border-strong: rgba(255, 255, 255, 0.2);
-      --radius-sm: 8px;
-      --radius-md: 14px;
-      --radius-lg: 20px;
-      --radius-xl: 26px;
+      --border-strong: rgba(255, 255, 255, 0.22);
+      
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 22px;
+      --radius-xl: 28px;
+      
       --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-mono: ui-monospace, SFMono-Regular, monospace;
@@ -46,7 +52,7 @@
     }
 
     body {
-      background-color: var(--bg-primary);
+      background-color: var(--bg-base);
       color: var(--text-main);
       font-family: var(--font-body);
       min-height: 100vh;
@@ -65,7 +71,7 @@
       max-width: 480px;
       margin: 0 auto;
       width: 100%;
-      padding: 12px 14px 100px 14px;
+      padding: 12px 14px 105px 14px;
     }
 
     /* Header */
@@ -73,41 +79,39 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 6px 2px 12px 2px;
+      padding: 6px 4px 14px 4px;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       cursor: pointer;
     }
 
     .brand-icon-box {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, #00e699, #0088ff);
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, #10b981, #059669);
       border-radius: var(--radius-sm);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 12px var(--accent-glow);
+      box-shadow: 0 4px 14px var(--accent-glow);
     }
 
     .brand-icon-svg {
       width: 18px;
       height: 18px;
-      fill: #002b1c;
+      fill: #ffffff;
     }
 
     .brand-title {
       font-family: var(--font-display);
       font-size: 17px;
-      font-weight: 900;
-      letter-spacing: -0.3px;
-      background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+      color: var(--text-main);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -118,10 +122,10 @@
       font-size: 9px;
       font-weight: 800;
       text-transform: uppercase;
-      background: rgba(0, 230, 153, 0.15);
-      color: var(--accent);
+      background: var(--accent-subtle);
+      color: var(--accent-bright);
       border: 1px solid var(--accent);
-      padding: 2px 6px;
+      padding: 2px 7px;
       border-radius: 6px;
       letter-spacing: 0.5px;
     }
@@ -137,17 +141,22 @@
     }
 
     .btn-header-action {
-      background: var(--bg-surface-elevated);
+      background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
       color: var(--text-secondary);
-      width: 34px;
-      height: 34px;
+      width: 36px;
+      height: 36px;
       border-radius: var(--radius-sm);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       transition: all 0.15s ease;
+    }
+
+    .btn-header-action:active {
+      transform: scale(0.92);
+      border-color: var(--border-medium);
     }
 
     .btn-header-action svg {
@@ -162,6 +171,22 @@
 
     body.admin-mode .admin-only {
       display: flex !important;
+    }
+
+    /* Views System (Catalog, Purchases, Referrals) */
+    .view-pane {
+      display: none;
+      flex-direction: column;
+      animation: fadeIn 0.18s ease;
+    }
+
+    .view-pane.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     /* Search & Action Row */
@@ -179,7 +204,8 @@
       display: flex;
       align-items: center;
       padding: 0 12px;
-      height: 42px;
+      height: 44px;
+      transition: border-color 0.15s ease;
     }
 
     .search-box:focus-within {
@@ -202,7 +228,7 @@
       background: transparent;
       border: none;
       color: var(--text-main);
-      font-size: 13px;
+      font-size: 13.5px;
       font-family: var(--font-body);
       width: 100%;
       outline: none;
@@ -213,13 +239,13 @@
     }
 
     .btn-add-item {
-      background: var(--bg-surface-elevated);
-      color: var(--accent);
+      background: var(--bg-surface);
+      color: var(--accent-bright);
       border: 1px dashed var(--accent);
       border-radius: var(--radius-md);
       padding: 0 14px;
       font-family: var(--font-display);
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 800;
       cursor: pointer;
       display: flex;
@@ -232,7 +258,7 @@
     .categories-wrap {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
       overflow-x: auto;
       padding-bottom: 8px;
       margin-bottom: 10px;
@@ -257,7 +283,10 @@
       align-items: center;
       gap: 6px;
       transition: all 0.15s ease;
-      position: relative;
+    }
+
+    .cat-chip:active {
+      transform: scale(0.95);
     }
 
     .cat-chip svg {
@@ -270,17 +299,7 @@
       background: var(--bg-surface-elevated);
       color: var(--text-main);
       border-color: var(--accent);
-    }
-
-    .cat-chip.active::after {
-      content: '';
-      position: absolute;
-      bottom: -4px;
-      left: 20%;
-      right: 20%;
-      height: 2px;
-      background: var(--accent);
-      border-radius: 2px;
+      box-shadow: 0 2px 8px var(--accent-subtle);
     }
 
     .cat-delete-btn {
@@ -315,9 +334,9 @@
       font-size: 11px;
       font-weight: 700;
       color: var(--text-muted);
-      letter-spacing: 0.5px;
+      letter-spacing: 0.4px;
       text-transform: uppercase;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       padding: 0 2px;
     }
 
@@ -331,22 +350,22 @@
     .item-card {
       background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-lg);
       overflow: hidden;
       display: flex;
       flex-direction: column;
       position: relative;
-      transition: transform 0.15s ease, border-color 0.15s ease;
+      transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.15s ease;
     }
 
     .item-card:active {
-      transform: scale(0.98);
+      transform: scale(0.97);
     }
 
     .item-cover-box {
       width: 100%;
       aspect-ratio: 16 / 10;
-      background: #08090c;
+      background: #090a0d;
       position: relative;
       overflow: hidden;
       display: flex;
@@ -368,43 +387,59 @@
       font-size: 9px;
       font-weight: 800;
       text-transform: uppercase;
-      padding: 3px 6px;
-      border-radius: 5px;
+      padding: 3px 7px;
+      border-radius: 6px;
       letter-spacing: 0.4px;
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(12px);
       z-index: 2;
     }
 
-    .badge-hit { background: rgba(255, 69, 0, 0.85); color: #fff; }
-    .badge-sale { background: rgba(0, 230, 153, 0.85); color: #002b1c; }
-    .badge-new { background: rgba(0, 136, 255, 0.85); color: #fff; }
-    .badge-top { background: rgba(186, 85, 211, 0.85); color: #fff; }
+    .badge-hit { background: rgba(239, 68, 68, 0.88); color: #fff; }
+    .badge-sale { background: rgba(16, 185, 129, 0.88); color: #042618; }
+    .badge-new { background: rgba(59, 130, 246, 0.88); color: #fff; }
+    .badge-top { background: rgba(168, 85, 247, 0.88); color: #fff; }
+
+    .item-stock-tag {
+      position: absolute;
+      bottom: 6px;
+      left: 6px;
+      font-size: 9.5px;
+      font-weight: 700;
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(8px);
+      color: #cbd5e1;
+      padding: 2px 6px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
 
     .item-body {
-      padding: 10px;
+      padding: 11px;
       display: flex;
       flex-direction: column;
       flex: 1;
     }
 
     .item-name {
-      font-size: 13px;
+      font-size: 13.5px;
       font-weight: 700;
-      line-height: 1.3;
+      line-height: 1.35;
       margin-bottom: 4px;
       color: var(--text-main);
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      min-height: 34px;
+      min-height: 36px;
     }
 
     .item-desc {
       font-size: 11px;
       color: var(--text-muted);
       line-height: 1.3;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -415,7 +450,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding-top: 6px;
+      padding-top: 8px;
       border-top: 1px solid var(--border-subtle);
     }
 
@@ -434,9 +469,9 @@
 
     .price-current {
       font-family: var(--font-display);
-      font-size: 15px;
+      font-size: 15.5px;
       font-weight: 800;
-      color: var(--accent);
+      color: var(--accent-bright);
     }
 
     .btn-buy {
@@ -461,8 +496,8 @@
 
     .btn-buy:active {
       background: var(--accent);
-      color: var(--accent-dark);
-      border-color: var(--accent);
+      color: #fff;
+      transform: scale(0.9);
     }
 
     .item-admin-tools {
@@ -479,8 +514,8 @@
     }
 
     .btn-card-admin {
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(6px);
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(8px);
       border: 1px solid var(--border-medium);
       color: #fff;
       width: 26px;
@@ -493,60 +528,73 @@
       font-size: 11px;
     }
 
-    /* Sticky Bottom Checkout Bar */
-    .bottom-bar {
+    /* Bottom Navigation Dock (Apple Quiet Luxury) */
+    .bottom-dock {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      background: rgba(18, 20, 26, 0.95);
-      backdrop-filter: blur(16px);
+      background: var(--bg-glass);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
       border-top: 1px solid var(--border-medium);
-      padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)) 16px;
+      padding: 8px 16px calc(10px + env(safe-area-inset-bottom, 0px)) 16px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: space-around;
       z-index: 100;
       max-width: 480px;
       margin: 0 auto;
     }
 
-    .cart-info {
+    .dock-tab {
       display: flex;
       flex-direction: column;
-    }
-
-    .cart-label {
-      font-size: 11px;
-      color: var(--text-muted);
-      font-weight: 600;
-    }
-
-    .cart-sum {
-      font-family: var(--font-display);
-      font-size: 17px;
-      font-weight: 800;
-      color: var(--text-main);
-    }
-
-    .btn-checkout {
-      background: var(--accent);
-      color: var(--accent-dark);
-      border: none;
-      padding: 13px 22px;
-      border-radius: var(--radius-md);
-      font-family: var(--font-display);
-      font-size: 14px;
-      font-weight: 800;
-      cursor: pointer;
-      display: flex;
       align-items: center;
-      gap: 6px;
-      transition: transform 0.15s;
+      gap: 3px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      transition: all 0.15s ease;
+      position: relative;
     }
 
-    .btn-checkout:active {
-      transform: scale(0.96);
+    .dock-tab svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .dock-tab-label {
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .dock-tab.active {
+      color: var(--accent-bright);
+    }
+
+    .dock-tab:active {
+      transform: scale(0.92);
+    }
+
+    .dock-badge {
+      position: absolute;
+      top: 0;
+      right: 4px;
+      background: var(--accent);
+      color: #032316;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 10px;
+      min-width: 16px;
+      text-align: center;
+      display: none;
     }
 
     /* Modal / Bottom Drawer */
@@ -554,7 +602,8 @@
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.88);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       z-index: 200;
       display: none;
       align-items: flex-end;
@@ -562,7 +611,7 @@
     }
 
     .modal-sheet {
-      background: #14161c;
+      background: #11131a;
       border: 1px solid var(--border-medium);
       border-radius: var(--radius-xl) var(--radius-xl) 0 0;
       width: 100%;
@@ -571,8 +620,8 @@
       max-height: 88dvh;
       overflow-y: auto;
       padding: 20px 18px calc(24px + env(safe-area-inset-bottom, 0px)) 18px;
-      animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.8);
+      animation: slideUp 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 -24px 64px rgba(0, 0, 0, 0.9);
     }
 
     @keyframes slideUp {
@@ -591,13 +640,13 @@
 
     .modal-title {
       font-family: var(--font-display);
-      font-size: 16px;
+      font-size: 16.5px;
       font-weight: 800;
       letter-spacing: -0.2px;
     }
 
     .modal-close {
-      background: var(--bg-surface-elevated);
+      background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
       color: var(--text-muted);
       width: 32px;
@@ -628,23 +677,28 @@
       display: block;
     }
 
-    .form-input, .form-select {
+    .form-input, .form-select, .form-textarea {
       width: 100%;
-      background: #0d0e12;
+      background: #08090d;
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
-      padding: 11px 13px;
+      padding: 12px 14px;
       color: #fff;
       font-size: 13px;
       font-family: var(--font-body);
       outline: none;
+      transition: border-color 0.15s ease;
     }
 
-    .form-input:focus, .form-select:focus {
+    .form-textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
       border-color: var(--border-strong);
     }
 
-    /* Gallery Photo Upload Box */
     .gallery-upload-box {
       border: 2px dashed var(--border-medium);
       background: rgba(0, 0, 0, 0.35);
@@ -662,11 +716,6 @@
       min-height: 110px;
     }
 
-    .gallery-upload-box:active {
-      border-color: var(--accent);
-      background: rgba(255, 255, 255, 0.03);
-    }
-
     .gallery-preview-img {
       width: 100%;
       max-height: 130px;
@@ -682,7 +731,7 @@
     .btn-submit {
       width: 100%;
       background: var(--accent);
-      color: var(--accent-dark);
+      color: #032316;
       border: none;
       padding: 14px;
       border-radius: var(--radius-md);
@@ -690,23 +739,24 @@
       font-size: 14px;
       font-weight: 800;
       cursor: pointer;
-      margin-top: 8px;
+      margin-top: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
+      transition: transform 0.15s ease, background-color 0.15s ease;
     }
 
     .btn-submit:active {
-      transform: scale(0.98);
+      transform: scale(0.97);
     }
 
-    /* Cart Item Row */
+    /* Cart Rows */
     .cart-row-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: #0d0e12;
+      background: #090a0d;
       border: 1px solid var(--border-subtle);
       padding: 10px 12px;
       border-radius: var(--radius-md);
@@ -756,7 +806,7 @@
     }
 
     .btn-qty {
-      background: var(--bg-surface-elevated);
+      background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
       color: var(--text-main);
       width: 26px;
@@ -779,9 +829,9 @@
     }
 
     .btn-clear-cart {
-      background: rgba(255, 77, 77, 0.12);
-      border: 1px solid rgba(255, 77, 77, 0.25);
-      color: #ff6b6b;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      color: #f87171;
       padding: 6px 10px;
       border-radius: var(--radius-sm);
       font-size: 11px;
@@ -796,6 +846,47 @@
       width: 12px;
       height: 12px;
       fill: currentColor;
+    }
+
+    /* Promo & Bonus Box */
+    .promo-box {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .promo-input {
+      flex: 1;
+      background: #08090d;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      color: #fff;
+      font-size: 13px;
+      text-transform: uppercase;
+      outline: none;
+    }
+
+    .btn-promo-apply {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-medium);
+      color: var(--text-main);
+      padding: 0 14px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .bonus-toggle-card {
+      background: #08090d;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     /* Payment Method Selector */
@@ -819,7 +910,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: #0d0e12;
+      background: #08090d;
       border: 1.5px solid var(--border-subtle);
       padding: 11px 13px;
       border-radius: var(--radius-md);
@@ -833,7 +924,7 @@
 
     .payment-card.active {
       border-color: var(--accent);
-      background: rgba(0, 230, 153, 0.08);
+      background: var(--accent-subtle);
     }
 
     .payment-card-left {
@@ -884,37 +975,42 @@
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: var(--accent-dark);
+      background: #032316;
     }
 
     /* Admin Settings Tabs */
     .settings-tabs {
       display: flex;
-      gap: 6px;
+      gap: 5px;
       margin-bottom: 16px;
-      background: #0d0e12;
+      background: #08090d;
       padding: 4px;
       border-radius: var(--radius-md);
       border: 1px solid var(--border-subtle);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .settings-tabs::-webkit-scrollbar {
+      display: none;
     }
 
     .settings-tab {
-      flex: 1;
       padding: 8px 10px;
       border-radius: var(--radius-sm);
       border: none;
       background: transparent;
       color: var(--text-muted);
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
       cursor: pointer;
+      white-space: nowrap;
       transition: all 0.15s ease;
-      text-align: center;
     }
 
     .settings-tab.active {
       background: var(--bg-surface-elevated);
-      color: var(--accent);
+      color: var(--accent-bright);
       border: 1px solid var(--border-medium);
     }
 
@@ -927,7 +1023,7 @@
     }
 
     .payment-setting-box {
-      background: #0d0e12;
+      background: #08090d;
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
       padding: 12px;
@@ -991,7 +1087,102 @@
 
     input:checked + .toggle-slider:before {
       transform: translateX(18px);
-      background-color: var(--accent-dark);
+      background-color: #032316;
+    }
+
+    /* Purchases List & Cards */
+    .purchase-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .purchase-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .purchase-code {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .purchase-status {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .status-paid { background: rgba(16, 185, 129, 0.15); color: var(--accent-bright); }
+    .status-pending { background: rgba(234, 179, 8, 0.15); color: #eab308; }
+
+    .key-box {
+      background: #08090d;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      margin-top: 8px;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--accent-bright);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .btn-copy-key {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    /* Referral / Partner Card */
+    .partner-hero-card {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(6, 78, 59, 0.05));
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .partner-stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .partner-stat-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      text-align: center;
+    }
+
+    .partner-stat-val {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent-bright);
+    }
+
+    .partner-stat-lbl {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
     }
   </style>
 </head>
@@ -1000,7 +1191,7 @@
   <div class="app-viewport">
     <!-- Header -->
     <header>
-      <div class="brand" onclick="loadBootstrap()" title="NORVEX SHOP">
+      <div class="brand" onclick="switchDockTab('catalog')" title="NORVEX SHOP">
         <div class="brand-icon-box">
           <svg class="brand-icon-svg" viewBox="0 0 24 24">
             <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
@@ -1019,41 +1210,91 @@
       </div>
     </header>
 
-    <!-- Search & Add Action -->
-    <div class="search-row">
-      <div class="search-box">
-        <span class="search-icon">
-          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-        </span>
-        <input type="text" id="searchInput" class="search-input" placeholder="Поиск товаров...">
+    <!-- TAB VIEW 1: CATALOG -->
+    <div class="view-pane active" id="viewCatalog">
+      <!-- Search & Add Action -->
+      <div class="search-row">
+        <div class="search-box">
+          <span class="search-icon">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          </span>
+          <input type="text" id="searchInput" class="search-input" placeholder="Поиск товаров...">
+        </div>
+        <button class="btn-add-item admin-only" onclick="openProductModal()">
+          <span>+ Товар</span>
+        </button>
       </div>
-      <!-- Add Item only visible to Admin -->
-      <button class="btn-add-item admin-only" onclick="openProductModal()">
-        <span>+ Товар</span>
-      </button>
+
+      <!-- Category Filter Bar -->
+      <div class="categories-wrap" id="categoriesBar"></div>
+
+      <!-- Meta Info -->
+      <div class="section-meta-row">
+        <span id="gridCountLabel">КАТАЛОГ (0)</span>
+        <span id="activeCategoryName" style="color:var(--text-secondary);">Все товары</span>
+      </div>
+
+      <!-- Items Grid -->
+      <div class="items-grid" id="itemsGrid"></div>
     </div>
 
-    <!-- Category Filter Bar -->
-    <div class="categories-wrap" id="categoriesBar"></div>
-
-    <!-- Meta Info -->
-    <div class="section-meta-row">
-      <span id="gridCountLabel">КАТАЛОГ (0)</span>
-      <span id="activeCategoryName" style="color:var(--text-secondary);">Все товары</span>
+    <!-- TAB VIEW 2: PURCHASES (MY ORDERS & KEYS) -->
+    <div class="view-pane" id="viewPurchases">
+      <div class="section-meta-row">
+        <span>МОИ ПОКУПКИ</span>
+        <span id="purchasesCountLabel">0 заказов</span>
+      </div>
+      <div id="purchasesList">
+        <!-- Renders dynamically -->
+      </div>
     </div>
 
-    <!-- Items Grid -->
-    <div class="items-grid" id="itemsGrid"></div>
+    <!-- TAB VIEW 3: REFERRALS & BONUSES -->
+    <div class="view-pane" id="viewReferrals">
+      <div class="partner-hero-card">
+        <div style="font-size:32px; margin-bottom:6px;">👥</div>
+        <div style="font-family:var(--font-display); font-size:18px; font-weight:800;">ПАРТНЕРСКАЯ ПРОГРАММА</div>
+        <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Приглашайте друзей и получайте <b id="refPercentText" style="color:var(--accent-bright);">5%</b> с каждой их покупки на бонусный баланс</div>
+        
+        <div class="partner-stat-grid">
+          <div class="partner-stat-box">
+            <div class="partner-stat-val" id="refBalanceVal">0 ₽</div>
+            <div class="partner-stat-lbl">Бонусный баланс</div>
+          </div>
+          <div class="partner-stat-box">
+            <div class="partner-stat-val" id="refInvitedVal">0</div>
+            <div class="partner-stat-lbl">Приглашено друзей</div>
+          </div>
+        </div>
+
+        <button class="btn-submit" onclick="copyReferralLink()">
+          📋 СКОПИРОВАТЬ РЕФ-ССЫЛКУ
+        </button>
+      </div>
+    </div>
   </div>
 
-  <!-- Bottom Bar -->
-  <div class="bottom-bar">
-    <div class="cart-info">
-      <span class="cart-label">В КОРЗИНЕ (<span id="cartCount">0</span>)</span>
-      <span class="cart-sum" id="cartTotalSum">0 ₽</span>
-    </div>
-    <button class="btn-checkout" onclick="openCartModal()">
-      <span>Оформить</span> ➔
+  <!-- Bottom Navigation Dock -->
+  <div class="bottom-dock">
+    <button class="dock-tab active" id="dockBtnCatalog" onclick="switchDockTab('catalog')">
+      <svg viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+      <span class="dock-tab-label">Витрина</span>
+    </button>
+
+    <button class="dock-tab" id="dockBtnPurchases" onclick="switchDockTab('purchases')">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+      <span class="dock-tab-label">Покупки</span>
+    </button>
+
+    <button class="dock-tab" id="dockBtnReferrals" onclick="switchDockTab('referrals')">
+      <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+      <span class="dock-tab-label">Партнерка</span>
+    </button>
+
+    <button class="dock-tab" id="dockBtnCart" onclick="openCartModal()">
+      <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+      <span class="dock-tab-label">Корзина</span>
+      <span class="dock-badge" id="cartDockBadge">0</span>
     </button>
   </div>
 
@@ -1061,11 +1302,10 @@
   <div class="modal-overlay" id="modalProductForm" onclick="handleBackdropClick(event, 'modalProductForm')">
     <div class="modal-sheet" onclick="event.stopPropagation()">
       <div class="modal-header">
-        <div class="modal-title" id="productModalTitle">ДОБАВИТЬ ТОВАР (АДМИН)</div>
+        <div class="modal-title" id="productModalTitle">ТОВАР (АДМИН)</div>
         <button class="modal-close" onclick="closeModal('modalProductForm')">✕</button>
       </div>
 
-      <!-- File Upload to /api/upload -->
       <div class="form-group">
         <label class="form-label">Фото товара *</label>
         <input type="file" id="inpFilePhoto" class="file-input-hidden" accept="image/*" onchange="handleServerFileUpload(event)">
@@ -1075,7 +1315,7 @@
           <div id="uploadPrompt">
             <div style="font-size:24px; margin-bottom:2px;">🖼️</div>
             <div style="font-size:12px; font-weight:700; color:var(--text-main);">Выбрать фото для сервера</div>
-            <div style="font-size:10px; color:var(--text-muted);">JPG, PNG, WebP (загрузка на сервер)</div>
+            <div style="font-size:10px; color:var(--text-muted);">JPG, PNG, WebP</div>
           </div>
         </div>
       </div>
@@ -1093,7 +1333,7 @@
       <div class="form-group">
         <label class="form-label">Бейдж товара</label>
         <select id="inpProdBadge" class="form-select">
-          <option value="">Авто (скидка) / Без бейджа</option>
+          <option value="">Авто / Без бейджа</option>
           <option value="hit">🔥 ХИТ</option>
           <option value="sale">⚡ СКИДКА</option>
           <option value="new">✨ NEW</option>
@@ -1107,14 +1347,14 @@
           <input type="number" id="inpProdPrice" class="form-input" placeholder="890">
         </div>
         <div class="form-group">
-          <label class="form-label">Старая цена до скидки (₽)</label>
-          <input type="number" id="inpProdOldPrice" class="form-input" placeholder="1200 (зачеркнется)">
+          <label class="form-label">Старая цена (₽)</label>
+          <input type="number" id="inpProdOldPrice" class="form-input" placeholder="1200">
         </div>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Описание / Свойства</label>
-        <input type="text" id="inpProdDesc" class="form-input" placeholder="Напр. В наличии • Моментальная выдача">
+        <label class="form-label">Описание</label>
+        <input type="text" id="inpProdDesc" class="form-input" placeholder="Напр. В наличии • Моментальная автовыдача">
       </div>
 
       <button class="btn-submit" id="btnSaveProductSubmit" onclick="saveProductForm()">СОХРАНИТЬ ТОВАР</button>
@@ -1125,13 +1365,13 @@
   <div class="modal-overlay" id="modalAddCat" onclick="handleBackdropClick(event, 'modalAddCat')">
     <div class="modal-sheet" onclick="event.stopPropagation()">
       <div class="modal-header">
-        <div class="modal-title">НОВАЯ КАТЕГОРИЯ (АДМИН)</div>
+        <div class="modal-title">НОВАЯ КАТЕГОРИЯ</div>
         <button class="modal-close" onclick="closeModal('modalAddCat')">✕</button>
       </div>
 
       <div class="form-group">
         <label class="form-label">Название категории *</label>
-        <input type="text" id="inpCatName" class="form-input" placeholder="Напр. CS2, Dota 2, Brawl Stars, Ключи">
+        <input type="text" id="inpCatName" class="form-input" placeholder="Напр. CS2, Steam, Ключи, Донат">
       </div>
 
       <div class="form-group">
@@ -1166,20 +1406,53 @@
 
       <div id="cartItemsList" style="margin-bottom:14px;"></div>
 
+      <!-- Promo Code Box -->
+      <div class="promo-box">
+        <input type="text" id="inpCartPromo" class="promo-input" placeholder="ПРОМОКОД">
+        <button class="btn-promo-apply" onclick="applyPromoCode()">Применить</button>
+      </div>
+      <div id="promoResultMsg" style="font-size:11.5px; margin-top:-6px; margin-bottom:10px; display:none;"></div>
+
+      <!-- Bonus Balance Box -->
+      <div class="bonus-toggle-card" id="bonusBalanceCard" style="display:none;">
+        <div>
+          <div style="font-size:12px; font-weight:700;">Использовать бонусы</div>
+          <div style="font-size:10.5px; color:var(--text-muted);">Доступно: <span id="cartAvailableBonus" style="color:var(--accent-bright);">0 ₽</span></div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="chkUseBonus" onchange="toggleBonusUse()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- Payment Method Selector -->
       <div class="payment-selector-title">Способ оплаты</div>
       <div class="payment-selector" id="paymentMethodsList">
         <!-- Renders dynamically -->
       </div>
 
-      <div style="background:#0d0e12; border:1px solid var(--border-subtle); padding:14px; border-radius:var(--radius-md); margin-bottom:14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; font-size:16px; font-weight:800;">
+      <!-- Price Breakdown -->
+      <div style="background:#08090d; border:1px solid var(--border-subtle); padding:14px; border-radius:var(--radius-md); margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--text-secondary); margin-bottom:4px;">
+          <span>Сумма товаров:</span>
+          <span id="modalCartSubtotalSum" style="font-family:var(--font-mono);">0 ₽</span>
+        </div>
+        <div id="modalCartDiscountRow" style="display:none; justify-content:space-between; align-items:center; font-size:13px; color:var(--accent-bright); margin-bottom:4px;">
+          <span>Скидка:</span>
+          <span id="modalCartDiscountSum" style="font-family:var(--font-mono);">-0 ₽</span>
+        </div>
+        <div id="modalCartBonusRow" style="display:none; justify-content:space-between; align-items:center; font-size:13px; color:var(--accent-bright); margin-bottom:4px;">
+          <span>Бонусы:</span>
+          <span id="modalCartBonusSum" style="font-family:var(--font-mono);">-0 ₽</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:16px; font-weight:800; padding-top:6px; border-top:1px solid var(--border-subtle);">
           <span>Итого:</span>
-          <span id="modalCartTotalSum" style="font-family:var(--font-display); color:var(--accent);">0 ₽</span>
+          <span id="modalCartTotalSum" style="font-family:var(--font-display); color:var(--accent-bright);">0 ₽</span>
         </div>
       </div>
 
       <button class="btn-submit" id="btnCartSubmit" onclick="proceedToBotOrder()">
-        ОФОРМИТЬ
+        ОФОРМИТЬ ЗАКАЗ
       </button>
     </div>
   </div>
@@ -1192,19 +1465,19 @@
         <button class="modal-close" onclick="closeModal('modalSbpInfo')">✕</button>
       </div>
 
-      <div style="background:#0d0e12; border:1px solid var(--border-subtle); padding:16px; border-radius:var(--radius-md); margin-bottom:14px; text-align:center;">
+      <div style="background:#08090d; border:1px solid var(--border-subtle); padding:16px; border-radius:var(--radius-md); margin-bottom:14px; text-align:center;">
         <div style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">Сумма к переводу</div>
-        <div id="sbpModalSum" style="font-family:var(--font-display); font-size:24px; font-weight:900; color:var(--accent); margin-bottom:14px;">0 ₽</div>
+        <div id="sbpModalSum" style="font-family:var(--font-display); font-size:24px; font-weight:900; color:var(--accent-bright); margin-bottom:14px;">0 ₽</div>
         
-        <div style="text-align:left; font-size:13px; line-height:1.6; background:var(--bg-surface-elevated); padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border-subtle);">
-          <div style="margin-bottom:6px;"><b>Номер телефона:</b> <span id="sbpModalPhone" style="user-select:all; color:var(--accent); font-weight:700;">-</span></div>
+        <div style="text-align:left; font-size:13px; line-height:1.6; background:var(--bg-surface); padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border-subtle);">
+          <div style="margin-bottom:6px;"><b>Номер телефона:</b> <span id="sbpModalPhone" style="user-select:all; color:var(--accent-bright); font-weight:700;">-</span></div>
           <div style="margin-bottom:6px;"><b>Банк:</b> <span id="sbpModalBank">-</span></div>
           <div><b>Получатель:</b> <span id="sbpModalRecipient">-</span></div>
         </div>
       </div>
 
       <div style="font-size:11.5px; color:var(--text-muted); margin-bottom:14px; text-align:center; line-height:1.4;">
-        Переведите сумму через СБП в приложении вашего банка и нажмите подтверждение
+        Переведите точную сумму по СБП в приложении банка и нажмите подтверждение
       </div>
 
       <button class="btn-submit" onclick="confirmSbpPaid()">
@@ -1213,18 +1486,21 @@
     </div>
   </div>
 
-  <!-- MODAL: SETTINGS (ADMIN ONLY) -->
+  <!-- MODAL: ADMIN SETTINGS & MANAGEMENT -->
   <div class="modal-overlay" id="modalSettings" onclick="handleBackdropClick(event, 'modalSettings')">
     <div class="modal-sheet" onclick="event.stopPropagation()">
       <div class="modal-header">
-        <div class="modal-title">НАСТРОЙКИ (АДМИН)</div>
+        <div class="modal-title">УПРАВЛЕНИЕ (АДМИН)</div>
         <button class="modal-close" onclick="closeModal('modalSettings')">✕</button>
       </div>
 
       <!-- Settings Tabs -->
       <div class="settings-tabs">
         <button class="settings-tab active" id="tabBtnGeneral" onclick="openSettingsTab('general')">⚙️ Основные</button>
-        <button class="settings-tab" id="tabBtnPayments" onclick="openSettingsTab('payments')">💳 Платежки (без ИП)</button>
+        <button class="settings-tab" id="tabBtnPayments" onclick="openSettingsTab('payments')">💳 Платежки</button>
+        <button class="settings-tab" id="tabBtnStock" onclick="openSettingsTab('stock')">⚡ Ключи</button>
+        <button class="settings-tab" id="tabBtnPromos" onclick="openSettingsTab('promos')">🎟️ Промокоды</button>
+        <button class="settings-tab" id="tabBtnBroadcast" onclick="openSettingsTab('broadcast')">📢 Рассылка</button>
       </div>
 
       <!-- TAB 1: General -->
@@ -1238,6 +1514,13 @@
           <label class="form-label">Название магазина</label>
           <input type="text" id="inpStoreTitle" class="form-input" placeholder="NORVEX SHOP">
         </div>
+
+        <div class="form-group">
+          <label class="form-label">% бонусов реферальной программы (по умолч. 5%)</label>
+          <input type="number" id="inpRefPercent" class="form-input" placeholder="5">
+        </div>
+
+        <button class="btn-submit" onclick="saveGeneralSettings()">СОХРАНИТЬ</button>
       </div>
 
       <!-- TAB 2: Payment Gateways -->
@@ -1253,7 +1536,7 @@
             </label>
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label class="form-label">API Token (из @CryptoBot -> Crypto Pay -> Create App)</label>
+            <label class="form-label">API Token (@CryptoBot -> Crypto Pay -> Create App)</label>
             <input type="password" id="inpCryptoBotToken" class="form-input" placeholder="12345:AA...">
           </div>
         </div>
@@ -1273,10 +1556,10 @@
           </div>
         </div>
 
-        <!-- Aaio (СБП и Карты РФ для физлиц) -->
+        <!-- Aaio (СБП и Карты РФ) -->
         <div class="payment-setting-box">
           <div class="payment-setting-header">
-            <div class="payment-setting-title">💳 Aaio (СБП, Карты РФ физлицам)</div>
+            <div class="payment-setting-title">💳 Aaio (СБП, Карты РФ без ИП)</div>
             <label class="toggle-switch">
               <input type="checkbox" id="chkAaio">
               <span class="toggle-slider"></span>
@@ -1323,15 +1606,88 @@
           </div>
         </div>
 
+        <button class="btn-submit" onclick="savePaymentSettings()">СОХРАНИТЬ ПЛАТЕЖКИ</button>
       </div>
 
-      <button class="btn-submit" onclick="saveSettings()">СОХРАНИТЬ ВСЕ НАСТРОЙКИ</button>
+      <!-- TAB 3: Digital Stock / Auto-fulfillment -->
+      <div class="settings-tab-pane" id="tabPaneStock">
+        <div class="form-group">
+          <label class="form-label">Выберите товар для добавления ключей</label>
+          <select id="inpStockProdSelect" class="form-select" onchange="loadProductStockAdmin()"></select>
+        </div>
+
+        <div id="stockStatusBox" style="background:#08090d; border:1px solid var(--border-subtle); padding:10px; border-radius:var(--radius-sm); margin-bottom:12px; font-size:12px;">
+          Остаток на складе: <b id="stockRemainingCount" style="color:var(--accent-bright);">0 шт</b>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Вставьте ключи/аккаунты (по 1 строке на ключ)</label>
+          <textarea id="inpStockKeysText" class="form-textarea" placeholder="XXXXX-YYYYY-ZZZZZ&#10;AAAAA-BBBBB-CCCCC"></textarea>
+        </div>
+
+        <button class="btn-submit" onclick="addStockKeys()">ПОПОЛНИТЬ СКЛАД</button>
+      </div>
+
+      <!-- TAB 4: Promo Codes -->
+      <div class="settings-tab-pane" id="tabPanePromos">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">Код промокода</label>
+            <input type="text" id="inpNewPromoCode" class="form-input" placeholder="SUMMER20">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Тип скидки</label>
+            <select id="inpNewPromoType" class="form-select">
+              <option value="percent">Процент (%)</option>
+              <option value="fixed">Фикс (₽)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">Размер скидки</label>
+            <input type="number" id="inpNewPromoVal" class="form-input" placeholder="15">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Мин. сумма (₽)</label>
+            <input type="number" id="inpNewPromoMin" class="form-input" placeholder="0">
+          </div>
+        </div>
+
+        <button class="btn-submit" onclick="createPromo()">СОЗДАТЬ ПРОМОКОД</button>
+
+        <div class="payment-selector-title" style="margin-top:16px;">Список активных промокодов</div>
+        <div id="adminPromosList"></div>
+      </div>
+
+      <!-- TAB 5: Broadcast / Marketing -->
+      <div class="settings-tab-pane" id="tabPaneBroadcast">
+        <div class="form-group">
+          <label class="form-label">Текст рассылки всем пользователям бота (HTML)</label>
+          <textarea id="inpBroadcastText" class="form-textarea" placeholder="🔥 Новое поступление ключей и скидка 20%!"></textarea>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">Текст кнопки (опционально)</label>
+            <input type="text" id="inpBroadcastBtnText" class="form-input" placeholder="🎮 Открыть витрину">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ссылка кнопки</label>
+            <input type="text" id="inpBroadcastBtnUrl" class="form-input" placeholder="https://t.me/...">
+          </div>
+        </div>
+
+        <button class="btn-submit" onclick="sendBroadcast()">📢 ОТПРАВИТЬ РАССЫЛКУ</button>
+      </div>
+
     </div>
   </div>
 
   <script>
     // ==========================================
-    // XSS PROTECTION: HTML ESCAPING
+    // XSS PROTECTION & UTILS
     // ==========================================
     function escapeHtml(str) {
       if (str === null || str === undefined) return '';
@@ -1343,9 +1699,19 @@
         .replace(/'/g, '&#039;');
     }
 
-    // ==========================================
-    // VECTOR SVG ICONS
-    // ==========================================
+    function triggerHaptic(type = 'medium') {
+      try {
+        if (window.Telegram?.WebApp?.HapticFeedback) {
+          if (type === 'selection') {
+            window.Telegram.WebApp.HapticFeedback.selectionChanged();
+          } else {
+            window.Telegram.WebApp.HapticFeedback.impactOccurred(type);
+          }
+        }
+      } catch(e) {}
+    }
+
+    // SVG Icons Map
     const SVG_ICONS = {
       all: `<svg viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>`,
       games: `<svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>`,
@@ -1385,7 +1751,7 @@
     }
 
     // ==========================================
-    // STATE
+    // APP STATE
     // ==========================================
     let categories = [];
     let products = [];
@@ -1396,16 +1762,43 @@
     let isAdmin = false;
     let tgBotHandle = 'NorvexShopBot';
     let storeTitle = 'NORVEX SHOP';
+    let refPercent = 5;
+    let userProfile = {};
     let paymentMethods = {};
     let selectedPaymentMethod = 'cryptobot';
-    let currentPendingOrder = null;
+    let activePromoCode = '';
+    let appliedDiscountRub = 0;
+    let isBonusUsed = false;
 
     function saveCartState() {
       localStorage.setItem('norvex_client_cart', JSON.stringify(cart));
     }
 
     // ==========================================
-    // BOOTSTRAP: LOAD REAL DB STATE FROM SERVER
+    // NAVIGATION DOCK TABS
+    // ==========================================
+    window.switchDockTab = function(tabName) {
+      triggerHaptic('selection');
+      
+      document.querySelectorAll('.dock-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.view-pane').forEach(v => v.classList.remove('active'));
+
+      if (tabName === 'catalog') {
+        document.getElementById('dockBtnCatalog').classList.add('active');
+        document.getElementById('viewCatalog').classList.add('active');
+      } else if (tabName === 'purchases') {
+        document.getElementById('dockBtnPurchases').classList.add('active');
+        document.getElementById('viewPurchases').classList.add('active');
+        loadMyPurchases();
+      } else if (tabName === 'referrals') {
+        document.getElementById('dockBtnReferrals').classList.add('active');
+        document.getElementById('viewReferrals').classList.add('active');
+        loadProfileData();
+      }
+    };
+
+    // ==========================================
+    // BOOTSTRAP: LOAD REAL DB STATE
     // ==========================================
     async function loadBootstrap() {
       try {
@@ -1415,9 +1808,13 @@
         isAdmin = data.isAdmin || false;
         storeTitle = data.storeTitle || 'NORVEX SHOP';
         tgBotHandle = data.botHandle || 'NorvexShopBot';
+        refPercent = data.refPercent || 5;
         paymentMethods = data.paymentMethods || {};
+        userProfile = data.profile || {};
 
         document.getElementById('storeNameText').innerText = storeTitle;
+        document.getElementById('refPercentText').innerText = `${refPercent}%`;
+
         if (isAdmin) {
           document.body.classList.add('admin-mode');
         } else {
@@ -1428,10 +1825,125 @@
         renderProducts();
         updateCartUI();
         renderPaymentSelector();
+        updateProfileUI();
       } catch (err) {
         console.error("Bootstrap error:", err);
       }
     }
+
+    // ==========================================
+    // PROFILE & REFERRALS
+    // ==========================================
+    function updateProfileUI() {
+      const balanceEl = document.getElementById('refBalanceVal');
+      const invitedEl = document.getElementById('refInvitedVal');
+      if (balanceEl) balanceEl.innerText = `${(userProfile.bonusBalance || 0).toLocaleString()} ₽`;
+      if (invitedEl) invitedEl.innerText = userProfile.invitedCount || 0;
+
+      const cartBonusEl = document.getElementById('cartAvailableBonus');
+      const bonusCard = document.getElementById('bonusBalanceCard');
+      if (cartBonusEl) cartBonusEl.innerText = `${(userProfile.bonusBalance || 0).toLocaleString()} ₽`;
+      if (bonusCard) {
+        bonusCard.style.display = (userProfile.bonusBalance && userProfile.bonusBalance > 0) ? 'flex' : 'none';
+      }
+    }
+
+    async function loadProfileData() {
+      try {
+        const res = await apiFetch('/api/profile');
+        if (res.profile) {
+          userProfile = res.profile;
+          updateProfileUI();
+        }
+      } catch (e) {}
+    }
+
+    window.copyReferralLink = function() {
+      triggerHaptic('medium');
+      const userId = userProfile.userId || (window.Telegram?.WebApp?.initDataUnsafe?.user?.id);
+      const link = `https://t.me/${tgBotHandle}?start=ref_${userId}`;
+      
+      navigator.clipboard.writeText(link).then(() => {
+        alert("✅ Ваша персональная реферальная ссылка скопирована в буфер обмена:\n\n" + link);
+      }).catch(() => {
+        alert("Реферальная ссылка:\n" + link);
+      });
+    };
+
+    // ==========================================
+    // PURCHASES (MY ORDERS & KEYS)
+    // ==========================================
+    async function loadMyPurchases() {
+      const container = document.getElementById('purchasesList');
+      if (!container) return;
+      container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);">⏳ Загрузка ваших заказов...</div>';
+
+      try {
+        const res = await apiFetch('/api/my-orders');
+        const orders = res.orders || [];
+        document.getElementById('purchasesCountLabel').innerText = `${orders.length} заказов`;
+
+        if (orders.length === 0) {
+          container.innerHTML = `
+            <div style="text-align:center; padding:50px 20px; color:var(--text-muted);">
+              <div style="font-size:36px; margin-bottom:8px;">📦</div>
+              <div style="font-size:14px; font-weight:700; color:var(--text-secondary);">Покупок пока нет</div>
+              <div style="font-size:12px; margin-top:4px;">Все купленные ключи и заказы появятся здесь</div>
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        orders.forEach(o => {
+          const isPaid = o.status === 'paid';
+          const statusClass = isPaid ? 'status-paid' : 'status-pending';
+          const statusText = isPaid ? '✅ Оплачен' : '⏳ В обработке';
+
+          let keysHtml = '';
+          if (o.deliveredKeys && Array.isArray(o.deliveredKeys)) {
+            o.deliveredKeys.forEach(dk => {
+              dk.keys.forEach(k => {
+                keysHtml += `
+                  <div class="key-box">
+                    <span>${escapeHtml(k)}</span>
+                    <button class="btn-copy-key" onclick="copyKeyText('${escapeHtml(k)}')">Копировать</button>
+                  </div>
+                `;
+              });
+            });
+          }
+
+          let itemsDesc = (o.items || []).map(i => `${i.name} (${i.qty} шт)`).join(', ');
+
+          html += `
+            <div class="purchase-card">
+              <div class="purchase-header">
+                <div class="purchase-code">#${escapeHtml(o.orderCode)}</div>
+                <div class="purchase-status ${statusClass}">${statusText}</div>
+              </div>
+              <div style="font-size:12.5px; font-weight:600; color:var(--text-main); margin-bottom:4px;">${escapeHtml(itemsDesc)}</div>
+              <div style="font-size:11px; color:var(--text-muted); display:flex; justify-content:space-between;">
+                <span>Сумма: <b>${o.totalRub.toLocaleString()} ₽</b></span>
+                <span>${escapeHtml(o.createdAt || '')}</span>
+              </div>
+              ${keysHtml}
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+      } catch (e) {
+        container.innerHTML = `<div style="text-align:center; padding:30px; color:#ff6b6b;">Ошибка загрузки покупок: ${e.message}</div>`;
+      }
+    }
+
+    window.copyKeyText = function(text) {
+      triggerHaptic('medium');
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Ключ скопирован в буфер обмена!");
+      });
+    };
 
     // ==========================================
     // PAYMENT SELECTOR LOGIC
@@ -1478,6 +1990,7 @@
     }
 
     window.selectPaymentMethod = function(method) {
+      triggerHaptic('selection');
       selectedPaymentMethod = method;
       renderPaymentSelector();
     };
@@ -1494,7 +2007,7 @@
 
       try {
         const promptEl = document.getElementById('uploadPrompt');
-        if (promptEl) promptEl.innerHTML = '<div style="font-size:12px; font-weight:700;">⏳ Загрузка на сервер...</div>';
+        if (promptEl) promptEl.innerHTML = '<div style="font-size:12px; font-weight:700;">⏳ Загрузка...</div>';
 
         const res = await apiFetch('/api/upload', {
           method: 'POST',
@@ -1529,7 +2042,7 @@
           promptEl.innerHTML = `
             <div style="font-size:24px; margin-bottom:2px;">🖼️</div>
             <div style="font-size:12px; font-weight:700; color:var(--text-main);">Выбрать фото для сервера</div>
-            <div style="font-size:10px; color:var(--text-muted);">JPG, PNG, WebP (загрузка на сервер)</div>
+            <div style="font-size:10px; color:var(--text-muted);">JPG, PNG, WebP</div>
           `;
           promptEl.style.display = 'block';
         }
@@ -1576,6 +2089,7 @@
     }
 
     window.setCategory = function(catId) {
+      triggerHaptic('selection');
       activeCategory = catId;
       renderCategories();
       renderProducts();
@@ -1618,10 +2132,15 @@
           ? `<img src="${escapeHtml(prod.img)}" class="item-cover-img" alt="${escapeHtml(prod.name)}" loading="lazy">` 
           : `<div style="color:var(--text-muted); font-size:24px;">🎮</div>`;
 
+        const stockTag = (prod.stockCount && prod.stockCount > 0) 
+          ? `<span class="item-stock-tag">⚡ ${prod.stockCount} шт</span>` 
+          : '';
+
         html += `
           <div class="item-card">
             <div class="item-cover-box">
               ${badgeHtml}
+              ${stockTag}
               ${imgHtml}
               <div class="item-admin-tools">
                 <button class="btn-card-admin" onclick="event.stopPropagation(); openProductModal('${escapeHtml(prod.id)}')" title="Редактировать">✏️</button>
@@ -1652,6 +2171,7 @@
     // CART MANAGEMENT
     // ==========================================
     window.addToCart = function(productId) {
+      triggerHaptic('medium');
       const prod = products.find(p => String(p.id) === String(productId));
       if (!prod) return;
 
@@ -1664,15 +2184,10 @@
 
       saveCartState();
       updateCartUI();
-
-      try {
-        if (window.Telegram?.WebApp?.HapticFeedback) {
-          window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-        }
-      } catch(e) {}
     };
 
     window.changeCartQty = function(productId, delta) {
+      triggerHaptic('selection');
       const item = cart.find(i => String(i.id) === String(productId));
       if (!item) return;
 
@@ -1684,10 +2199,15 @@
       saveCartState();
       updateCartUI();
       renderCartModalList();
+      recalculateCartFinancials();
     };
 
     window.clearCart = function() {
+      triggerHaptic('medium');
       cart = [];
+      activePromoCode = '';
+      appliedDiscountRub = 0;
+      isBonusUsed = false;
       saveCartState();
       updateCartUI();
       closeModal('modalCart');
@@ -1695,25 +2215,122 @@
 
     function updateCartUI() {
       let totalCount = 0;
-      let totalSum = 0;
+      let subtotalSum = 0;
 
       cart.forEach(item => {
         const prod = products.find(p => String(p.id) === String(item.id));
         if (prod) {
           totalCount += item.qty;
-          totalSum += prod.price * item.qty;
+          subtotalSum += prod.price * item.qty;
         }
       });
 
-      const countEl = document.getElementById('cartCount');
-      if (countEl) countEl.innerText = totalCount;
+      const badgeEl = document.getElementById('cartDockBadge');
+      if (badgeEl) {
+        badgeEl.innerText = totalCount;
+        badgeEl.style.display = totalCount > 0 ? 'inline-block' : 'none';
+      }
 
-      const sumEl = document.getElementById('cartTotalSum');
-      if (sumEl) sumEl.innerText = `${totalSum.toLocaleString()} ₽`;
-
-      const modalSumEl = document.getElementById('modalCartTotalSum');
-      if (modalSumEl) modalSumEl.innerText = `${totalSum.toLocaleString()} ₽`;
+      recalculateCartFinancials(subtotalSum);
     }
+
+    function recalculateCartFinancials(providedSubtotal = null) {
+      let subtotal = 0;
+      if (providedSubtotal !== null) {
+        subtotal = providedSubtotal;
+      } else {
+        cart.forEach(item => {
+          const prod = products.find(p => String(p.id) === String(item.id));
+          if (prod) subtotal += prod.price * item.qty;
+        });
+      }
+
+      const subtotalEl = document.getElementById('modalCartSubtotalSum');
+      if (subtotalEl) subtotalEl.innerText = `${subtotal.toLocaleString()} ₽`;
+
+      // скидка по промокоду
+      const discountRow = document.getElementById('modalCartDiscountRow');
+      const discountSumEl = document.getElementById('modalCartDiscountSum');
+      if (appliedDiscountRub > 0) {
+        discountRow.style.display = 'flex';
+        discountSumEl.innerText = `-${appliedDiscountRub.toLocaleString()} ₽`;
+      } else {
+        discountRow.style.display = 'none';
+      }
+
+      // расчет бонусов
+      let bonusUsed = 0;
+      const bonusRow = document.getElementById('modalCartBonusRow');
+      const bonusSumEl = document.getElementById('modalCartBonusSum');
+      const availableBonus = userProfile.bonusBalance || 0;
+
+      if (isBonusUsed && availableBonus > 0) {
+        const maxPossibleBonus = Math.max(0, subtotal - appliedDiscountRub - 1);
+        bonusUsed = Math.min(availableBonus, maxPossibleBonus);
+        bonusRow.style.display = 'flex';
+        bonusSumEl.innerText = `-${bonusUsed.toLocaleString()} ₽`;
+      } else {
+        bonusRow.style.display = 'none';
+      }
+
+      const finalSum = Math.max(1, subtotal - appliedDiscountRub - bonusUsed);
+      const totalEl = document.getElementById('modalCartTotalSum');
+      if (totalEl) totalEl.innerText = `${finalSum.toLocaleString()} ₽`;
+    }
+
+    window.toggleBonusUse = function() {
+      triggerHaptic('selection');
+      isBonusUsed = document.getElementById('chkUseBonus').checked;
+      recalculateCartFinancials();
+    };
+
+    window.applyPromoCode = async function() {
+      triggerHaptic('medium');
+      const code = document.getElementById('inpCartPromo').value.trim();
+      const msgEl = document.getElementById('promoResultMsg');
+
+      if (!code) {
+        appliedDiscountRub = 0;
+        activePromoCode = '';
+        msgEl.style.display = 'none';
+        recalculateCartFinancials();
+        return;
+      }
+
+      let subtotal = 0;
+      cart.forEach(item => {
+        const prod = products.find(p => String(p.id) === String(item.id));
+        if (prod) subtotal += prod.price * item.qty;
+      });
+
+      try {
+        const res = await apiFetch('/api/promo/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, totalRub: subtotal })
+        });
+
+        if (res.ok) {
+          activePromoCode = code;
+          appliedDiscountRub = res.discountRub || 0;
+          msgEl.style.display = 'block';
+          msgEl.style.color = 'var(--accent-bright)';
+          msgEl.innerText = `✅ Промокод применен: -${appliedDiscountRub.toLocaleString()} ₽`;
+        } else {
+          activePromoCode = '';
+          appliedDiscountRub = 0;
+          msgEl.style.display = 'block';
+          msgEl.style.color = '#ff6b6b';
+          msgEl.innerText = `❌ ${res.message}`;
+        }
+      } catch (err) {
+        msgEl.style.display = 'block';
+        msgEl.style.color = '#ff6b6b';
+        msgEl.innerText = `❌ Ошибка проверки промокода`;
+      }
+
+      recalculateCartFinancials();
+    };
 
     function renderCartModalList() {
       const listEl = document.getElementById('cartItemsList');
@@ -1754,6 +2371,7 @@
     }
 
     window.openCartModal = function() {
+      triggerHaptic('medium');
       if (cart.length === 0) {
         alert("Корзина пуста. Добавьте товары кнопкой [+]");
         return;
@@ -1769,18 +2387,29 @@
     // ORDER DISPATCH & PAYMENT GATEWAYS
     // ==========================================
     window.proceedToBotOrder = async function() {
+      triggerHaptic('medium');
       if (cart.length === 0) return;
 
       const btnSubmit = document.getElementById('btnCartSubmit');
       if (btnSubmit) {
         btnSubmit.disabled = true;
-        btnSubmit.innerText = "⏳ Формирование счета...";
+        btnSubmit.innerText = "⏳ Формирование заказа...";
       }
 
       try {
+        let subtotal = 0;
+        cart.forEach(item => {
+          const prod = products.find(p => String(p.id) === String(item.id));
+          if (prod) subtotal += prod.price * item.qty;
+        });
+
+        const bonusToUse = isBonusUsed ? (userProfile.bonusBalance || 0) : 0;
+
         const payload = {
           items: cart.map(i => ({ id: String(i.id), qty: parseInt(i.qty) || 1 })),
-          paymentMethod: selectedPaymentMethod
+          paymentMethod: selectedPaymentMethod,
+          promoCode: activePromoCode,
+          useBonus: bonusToUse
         };
 
         const res = await apiFetch('/api/orders', {
@@ -1790,19 +2419,22 @@
         });
 
         cart = [];
+        activePromoCode = '';
+        appliedDiscountRub = 0;
+        isBonusUsed = false;
         saveCartState();
         updateCartUI();
         closeModal('modalCart');
 
         const order = res.order;
         const payment = res.payment || {};
-        currentPendingOrder = order;
 
         // 1. Telegram Stars (Native Invoice)
         if (payment.invoiceLink && window.Telegram?.WebApp?.openInvoice) {
           window.Telegram.WebApp.openInvoice(payment.invoiceLink, function(status) {
             if (status === 'paid') {
               alert(`🎉 Заказ #${order.orderId} оплачен звёздами! Товары отправлены в диалог`);
+              loadBootstrap();
             } else if (status === 'cancelled') {
               alert(`Оплата звёздами отменена`);
             }
@@ -1866,7 +2498,7 @@
       } finally {
         if (btnSubmit) {
           btnSubmit.disabled = false;
-          btnSubmit.innerText = "ОФОРМИТЬ";
+          btnSubmit.innerText = "ОФОРМИТЬ ЗАКАЗ";
         }
       }
     };
@@ -1907,7 +2539,7 @@
         const prod = products.find(p => String(p.id) === String(productId));
         if (!prod) return;
 
-        document.getElementById('productModalTitle').innerText = "РЕДАКТИРОВАТЬ ТОВАР (АДМИН)";
+        document.getElementById('productModalTitle').innerText = "РЕДАКТИРОВАТЬ ТОВАР";
         document.getElementById('btnSaveProductSubmit').innerText = "СОХРАНИТЬ ИЗМЕНЕНИЯ";
         document.getElementById('inpProdName').value = prod.name;
         document.getElementById('inpProdCat').value = prod.catId;
@@ -1917,7 +2549,7 @@
         document.getElementById('inpProdDesc').value = prod.desc || '';
         resetPhotoUpload(prod.img || '');
       } else {
-        document.getElementById('productModalTitle').innerText = "ДОБАВИТЬ ТОВАР (АДМИН)";
+        document.getElementById('productModalTitle').innerText = "ДОБАВИТЬ ТОВАР";
         document.getElementById('btnSaveProductSubmit').innerText = "СОХРАНИТЬ ТОВАР";
         document.getElementById('inpProdName').value = '';
         if (activeCategory !== 'all') {
@@ -2031,18 +2663,38 @@
     };
 
     // ==========================================
-    // ADMIN SETTINGS & PAYMENT GATEWAYS CONFIG
+    // ADMIN SETTINGS, STOCK, PROMOS, BROADCAST
     // ==========================================
     window.openSettingsTab = function(tabName) {
-      document.getElementById('tabBtnGeneral').classList.toggle('active', tabName === 'general');
-      document.getElementById('tabBtnPayments').classList.toggle('active', tabName === 'payments');
-      document.getElementById('tabPaneGeneral').classList.toggle('active', tabName === 'general');
-      document.getElementById('tabPanePayments').classList.toggle('active', tabName === 'payments');
+      triggerHaptic('selection');
+      document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.settings-tab-pane').forEach(p => p.classList.remove('active'));
+
+      if (tabName === 'general') {
+        document.getElementById('tabBtnGeneral').classList.add('active');
+        document.getElementById('tabPaneGeneral').classList.add('active');
+      } else if (tabName === 'payments') {
+        document.getElementById('tabBtnPayments').classList.add('active');
+        document.getElementById('tabPanePayments').classList.add('active');
+      } else if (tabName === 'stock') {
+        document.getElementById('tabBtnStock').classList.add('active');
+        document.getElementById('tabPaneStock').classList.add('active');
+        populateStockProductsSelect();
+      } else if (tabName === 'promos') {
+        document.getElementById('tabBtnPromos').classList.add('active');
+        document.getElementById('tabPanePromos').classList.add('active');
+        loadAdminPromos();
+      } else if (tabName === 'broadcast') {
+        document.getElementById('tabBtnBroadcast').classList.add('active');
+        document.getElementById('tabPaneBroadcast').classList.add('active');
+      }
     };
 
     window.openSettingsModal = async function() {
+      triggerHaptic('medium');
       document.getElementById('inpTgBotUsername').value = tgBotHandle;
       document.getElementById('inpStoreTitle').value = storeTitle;
+      document.getElementById('inpRefPercent').value = refPercent;
 
       try {
         const payConf = await apiFetch('/api/admin/payment-settings');
@@ -2061,18 +2713,31 @@
         document.getElementById('inpSbpPhone').value = payConf.sbpPhone || '';
         document.getElementById('inpSbpBank').value = payConf.sbpBank || 'СБП';
         document.getElementById('inpSbpRecipient').value = payConf.sbpRecipient || '';
-      } catch (e) {
-        console.warn("Could not load payment settings:", e);
-      }
+      } catch (e) {}
 
       openSettingsTab('general');
       document.getElementById('modalSettings').style.display = 'flex';
     };
 
-    window.saveSettings = async function() {
+    window.saveGeneralSettings = async function() {
       const botUsername = document.getElementById('inpTgBotUsername').value.trim().replace('@', '');
       const title = document.getElementById('inpStoreTitle').value.trim();
+      const refP = parseInt(document.getElementById('inpRefPercent').value) || 5;
 
+      try {
+        await apiFetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ botUsername, storeTitle: title, refPercent: refP })
+        });
+        await loadBootstrap();
+        alert("✅ Основные настройки сохранены");
+      } catch (err) {
+        alert("Ошибка сохранения: " + err.message);
+      }
+    };
+
+    window.savePaymentSettings = async function() {
       const payPayload = {
         cryptobotEnabled: document.getElementById('chkCryptoBot').checked,
         cryptobotToken: document.getElementById('inpCryptoBotToken').value.trim(),
@@ -2089,23 +2754,152 @@
       };
 
       try {
-        await apiFetch('/api/settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ botUsername, storeTitle: title })
-        });
-
         await apiFetch('/api/admin/payment-settings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payPayload)
         });
-
         await loadBootstrap();
-        closeModal('modalSettings');
-        alert("✅ Все настройки успешно сохранены");
+        alert("✅ Настройки платежей сохранены");
       } catch (err) {
-        alert("Ошибка сохранения настроек: " + err.message);
+        alert("Ошибка сохранения: " + err.message);
+      }
+    };
+
+    // Stock / Keys
+    function populateStockProductsSelect() {
+      const sel = document.getElementById('inpStockProdSelect');
+      if (!sel) return;
+      sel.innerHTML = products.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)} (${p.stockCount || 0} шт)</option>`).join('');
+      loadProductStockAdmin();
+    }
+
+    window.loadProductStockAdmin = async function() {
+      const prodId = document.getElementById('inpStockProdSelect').value;
+      if (!prodId) return;
+
+      try {
+        const res = await apiFetch(`/api/admin/stock/${prodId}`);
+        const activeStock = (res.stock || []).filter(s => !s.isUsed);
+        document.getElementById('stockRemainingCount').innerText = `${activeStock.length} шт`;
+      } catch(e) {}
+    };
+
+    window.addStockKeys = async function() {
+      const prodId = document.getElementById('inpStockProdSelect').value;
+      const text = document.getElementById('inpStockKeysText').value.trim();
+      if (!prodId || !text) {
+        alert("Выберите товар и вставьте ключи");
+        return;
+      }
+
+      const keys = text.split('\n').map(k => k.trim()).filter(k => k.length > 0);
+      try {
+        const res = await apiFetch(`/api/admin/stock/${prodId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ keys })
+        });
+        document.getElementById('inpStockKeysText').value = '';
+        await loadBootstrap();
+        loadProductStockAdmin();
+        alert(`✅ Успешно добавлено ${res.addedCount} ключей на склад автовыдачи`);
+      } catch (err) {
+        alert("Ошибка пополнения склада: " + err.message);
+      }
+    };
+
+    // Promos
+    async function loadAdminPromos() {
+      const container = document.getElementById('adminPromosList');
+      if (!container) return;
+      container.innerHTML = '<div style="font-size:12px; color:var(--text-muted);">Загрузка...</div>';
+
+      try {
+        const res = await apiFetch('/api/admin/promos');
+        const promos = res.promos || [];
+        if (promos.length === 0) {
+          container.innerHTML = '<div style="font-size:12px; color:var(--text-muted);">Промокодов пока нет</div>';
+          return;
+        }
+
+        let html = '';
+        promos.forEach(p => {
+          const typeStr = p.discountType === 'percent' ? `${p.discountVal}%` : `${p.discountVal} ₽`;
+          html += `
+            <div style="background:#08090d; border:1px solid var(--border-subtle); padding:10px 12px; border-radius:var(--radius-sm); margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
+              <div>
+                <b style="color:var(--accent-bright); font-size:13px;">${escapeHtml(p.code)}</b>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Скидка: ${typeStr} • Использован: ${p.usesCount || 0} раз</div>
+              </div>
+              <button class="btn-clear-cart" onclick="deletePromo('${escapeHtml(p.code)}')">Удалить</button>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } catch(e) {}
+    }
+
+    window.createPromo = async function() {
+      const code = document.getElementById('inpNewPromoCode').value.trim();
+      const discountType = document.getElementById('inpNewPromoType').value;
+      const discountVal = parseFloat(document.getElementById('inpNewPromoVal').value) || 0;
+      const minOrder = parseInt(document.getElementById('inpNewPromoMin').value) || 0;
+
+      if (!code || discountVal <= 0) {
+        alert("Укажите код и размер скидки");
+        return;
+      }
+
+      try {
+        await apiFetch('/api/admin/promos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, discountType, discountVal, minOrder })
+        });
+        document.getElementById('inpNewPromoCode').value = '';
+        document.getElementById('inpNewPromoVal').value = '';
+        loadAdminPromos();
+        alert("✅ Промокод создан");
+      } catch (err) {
+        alert("Ошибка создания: " + err.message);
+      }
+    };
+
+    window.deletePromo = async function(code) {
+      if (!confirm(`Удалить промокод ${code}?`)) return;
+      try {
+        await apiFetch(`/api/admin/promos/${code}`, { method: 'DELETE' });
+        loadAdminPromos();
+      } catch (err) {
+        alert("Ошибка удаления: " + err.message);
+      }
+    };
+
+    // Broadcast
+    window.sendBroadcast = async function() {
+      const text = document.getElementById('inpBroadcastText').value.trim();
+      const buttonText = document.getElementById('inpBroadcastBtnText').value.trim();
+      const buttonUrl = document.getElementById('inpBroadcastBtnUrl').value.trim();
+
+      if (!text) {
+        alert("Введите текст рассылки");
+        return;
+      }
+
+      if (!confirm("Отправить это сообщение всем пользователям бота?")) return;
+
+      try {
+        const res = await apiFetch('/api/admin/broadcast', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, buttonText, buttonUrl })
+        });
+
+        alert(`✅ Рассылка завершена!\nУспешно отправлено: ${res.sent} из ${res.total} пользователей`);
+        document.getElementById('inpBroadcastText').value = '';
+      } catch (err) {
+        alert("Ошибка рассылки: " + err.message);
       }
     };
 

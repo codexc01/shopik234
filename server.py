@@ -4,6 +4,7 @@ import uuid
 import json
 import logging
 import threading
+import asyncio
 import aiofiles
 from typing import Optional, List, Dict, Any
 
@@ -31,7 +32,7 @@ if os.path.exists(env_path):
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
 ADMIN_IDS_RAW = os.environ.get("ADMIN_IDS", "")
 ADMIN_IDS = [a.strip() for a in ADMIN_IDS_RAW.split(",") if a.strip()]
-WEBAPP_URL = os.environ.get("WEBAPP_URL", "http://localhost:8000")
+WEBAPP_URL = os.environ.get("WEBAPP_URL", "https://shopik234.vercel.app")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
@@ -47,7 +48,7 @@ os.makedirs(UPLOADS_DIR, exist_ok=True)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("norvex_server")
 
-app = FastAPI(title="NORVEX SHOP Backend API", version="2.1.0")
+app = FastAPI(title="NORVEX SHOP Luxury API", version="3.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,7 +58,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# статика для загруженных картинок
+# статика для картинок
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
 # проверка пользователя телеграм
@@ -116,10 +117,33 @@ class OrderItemInput(BaseModel):
 class OrderCreateRequest(BaseModel):
     items: List[OrderItemInput]
     paymentMethod: Optional[str] = "manual"
+    promoCode: Optional[str] = ""
+    useBonus: Optional[int] = 0
+
+class PromoValidateRequest(BaseModel):
+    code: str
+    totalRub: int
+
+class PromoCreateRequest(BaseModel):
+    code: str
+    discountType: str = "percent" # "percent" | "fixed"
+    discountVal: float
+    minOrder: Optional[int] = 0
+    maxUses: Optional[int] = 0
+
+class StockAddRequest(BaseModel):
+    keys: List[str]
+
+class BroadcastRequest(BaseModel):
+    text: str
+    buttonText: Optional[str] = None
+    buttonUrl: Optional[str] = None
+    imageUrl: Optional[str] = None
 
 class SettingsUpdate(BaseModel):
     botUsername: Optional[str] = None
     storeTitle: Optional[str] = None
+    refPercent: Optional[int] = 5
 
 class PaymentSettingsUpdate(BaseModel):
     cryptobotEnabled: Optional[bool] = None
@@ -136,8 +160,6 @@ class PaymentSettingsUpdate(BaseModel):
     sbpRecipient: Optional[str] = None
 
 router = APIRouter()
-
-# кэш покупателей для ответов через реплай
 order_buyers_cache = {}
 
 # главная страница магазина
@@ -156,7 +178,7 @@ async def serve_index():
 @app.get("/api")
 @router.get("/api")
 async def root_api():
-    return {"ok": True, "status": "online", "message": "NORVEX SHOP API работает"}
+    return {"ok": True, "status": "online", "message": "NORVEX SHOP Luxury API работает"}
 
 # получение стартовых данных магазина
 @router.get("/bootstrap")
@@ -164,13 +186,25 @@ async def root_api():
 @app.get("/bootstrap")
 @app.get("/api/bootstrap")
 async def bootstrap(user: Dict[str, Any] = Depends(get_current_tg_user)):
+    user_id = user.get("user_id")
+    user_info = user.get("user") or {}
+    
+    # авторегистрация пользователя
+    if user_id and user_id != 999999:
+        db.register_bot_user(
+            user_id=user_id,
+            username=user.get("username", ""),
+            first_name=user_info.get("first_name", "")
+        )
+
     categories = db.get_categories()
     products = db.get_products()
     store_title = db.get_setting("store_title", "NORVEX SHOP")
     bot_handle = db.get_setting("tg_bot_handle", "NorvexShopBot")
+    ref_percent = int(db.get_setting("ref_percent", "5"))
 
-    # доступные платежные методы
     payment_methods = get_public_payment_methods()
+    user_profile = db.get_user_profile(user_id) if user_id else {}
 
     return {
         "ok": True,
@@ -178,9 +212,11 @@ async def bootstrap(user: Dict[str, Any] = Depends(get_current_tg_user)):
         "user": user.get("user", {}),
         "storeTitle": store_title,
         "botHandle": bot_handle,
+        "refPercent": ref_percent,
         "categories": categories,
         "products": products,
-        "paymentMethods": payment_methods
+        "paymentMethods": payment_methods,
+        "profile": user_profile
     }
 
 def get_public_payment_methods() -> Dict[str, Any]:
@@ -188,7 +224,7 @@ def get_public_payment_methods() -> Dict[str, Any]:
     cryptobot_enabled = db.get_setting("cryptobot_enabled", "true" if cryptobot_token else "false") == "true"
     
     stars_enabled = db.get_setting("stars_enabled", "true") == "true"
-    stars_rate = float(db.get_setting("stars_rate", "2.0")) # 1 Star = 2 RUB
+    stars_rate = float(db.get_setting("stars_rate", "2.0"))
     
     aaio_merchant = db.get_setting("aaio_merchant_id", os.environ.get("AAIO_MERCHANT_ID", ""))
     aaio_enabled = db.get_setting("aaio_enabled", "true" if aaio_merchant else "false") == "true"
@@ -199,7 +235,7 @@ def get_public_payment_methods() -> Dict[str, Any]:
     sbp_recipient = db.get_setting("sbp_recipient", "")
 
     return {
-        "cryptobot": {"enabled": cryptobot_enabled, "name": "CryptoBot (USDT, TON, BTC)", "icon": "💎"},
+        "cryptobot": {"enabled": cryptobot_enabled, "name": "CryptoBot (USDT, TON)", "icon": "💎"},
         "stars": {"enabled": stars_enabled, "name": "Telegram Stars (Звёзды)", "icon": "⭐", "rate": stars_rate},
         "aaio": {"enabled": aaio_enabled, "name": "Карты РФ / СБП (Aaio)", "icon": "💳"},
         "sbp": {
@@ -212,61 +248,29 @@ def get_public_payment_methods() -> Dict[str, Any]:
         }
     }
 
-# список доступных способов оплаты
-@router.get("/payment-methods")
-async def list_payment_methods():
-    return {"ok": True, "methods": get_public_payment_methods()}
+# профиль пользователя и рефералы
+@router.get("/profile")
+async def get_profile(user: Dict[str, Any] = Depends(get_current_tg_user)):
+    user_id = user.get("user_id")
+    profile = db.get_user_profile(user_id)
+    return {"ok": True, "profile": profile}
 
-# настройки платежек для админки
-@router.get("/admin/payment-settings")
-async def get_admin_payment_settings(admin: Dict[str, Any] = Depends(require_admin)):
+# история покупок пользователя
+@router.get("/my-orders")
+async def get_my_orders(user: Dict[str, Any] = Depends(get_current_tg_user)):
+    user_id = user.get("user_id")
+    orders = db.get_user_orders(user_id)
+    return {"ok": True, "orders": orders}
+
+# проверка промокода
+@router.post("/promo/validate")
+async def validate_promo_endpoint(payload: PromoValidateRequest):
+    ok, msg, discount_rub = db.validate_promo(payload.code, payload.totalRub)
     return {
-        "ok": True,
-        "cryptobotEnabled": db.get_setting("cryptobot_enabled", "false") == "true",
-        "cryptobotToken": db.get_setting("cryptobot_token", os.environ.get("CRYPTOBOT_TOKEN", "")),
-        "starsEnabled": db.get_setting("stars_enabled", "true") == "true",
-        "starsRate": float(db.get_setting("stars_rate", "2.0")),
-        "aaioEnabled": db.get_setting("aaio_enabled", "false") == "true",
-        "aaioMerchantId": db.get_setting("aaio_merchant_id", os.environ.get("AAIO_MERCHANT_ID", "")),
-        "aaioSecret1": db.get_setting("aaio_secret_1", os.environ.get("AAIO_SECRET_1", "")),
-        "aaioSecret2": db.get_setting("aaio_secret_2", os.environ.get("AAIO_SECRET_2", "")),
-        "sbpEnabled": db.get_setting("sbp_enabled", "true") == "true",
-        "sbpPhone": db.get_setting("sbp_phone", ""),
-        "sbpBank": db.get_setting("sbp_bank", "СБП"),
-        "sbpRecipient": db.get_setting("sbp_recipient", "")
+        "ok": ok,
+        "message": msg,
+        "discountRub": discount_rub
     }
-
-@router.post("/admin/payment-settings")
-async def save_admin_payment_settings(payload: PaymentSettingsUpdate, admin: Dict[str, Any] = Depends(require_admin)):
-    if payload.cryptobotEnabled is not None:
-        db.set_setting("cryptobot_enabled", "true" if payload.cryptobotEnabled else "false")
-    if payload.cryptobotToken is not None:
-        db.set_setting("cryptobot_token", payload.cryptobotToken.strip())
-        
-    if payload.starsEnabled is not None:
-        db.set_setting("stars_enabled", "true" if payload.starsEnabled else "false")
-    if payload.starsRate is not None:
-        db.set_setting("stars_rate", str(payload.starsRate))
-        
-    if payload.aaioEnabled is not None:
-        db.set_setting("aaio_enabled", "true" if payload.aaioEnabled else "false")
-    if payload.aaioMerchantId is not None:
-        db.set_setting("aaio_merchant_id", payload.aaioMerchantId.strip())
-    if payload.aaioSecret1 is not None:
-        db.set_setting("aaio_secret_1", payload.aaioSecret1.strip())
-    if payload.aaioSecret2 is not None:
-        db.set_setting("aaio_secret_2", payload.aaioSecret2.strip())
-        
-    if payload.sbpEnabled is not None:
-        db.set_setting("sbp_enabled", "true" if payload.sbpEnabled else "false")
-    if payload.sbpPhone is not None:
-        db.set_setting("sbp_phone", payload.sbpPhone.strip())
-    if payload.sbpBank is not None:
-        db.set_setting("sbp_bank", payload.sbpBank.strip())
-    if payload.sbpRecipient is not None:
-        db.set_setting("sbp_recipient", payload.sbpRecipient.strip())
-
-    return {"ok": True, "message": "Настройки платежей сохранены"}
 
 # список товаров
 @router.get("/products")
@@ -280,7 +284,7 @@ async def list_categories():
     categories = db.get_categories()
     return {"ok": True, "categories": categories}
 
-# оформление заказа с серверным расчетом цены и генерацией счета
+# оформление заказа с промокодом, бонусами и платежной интеграцией
 @router.post("/orders")
 async def create_order(payload: OrderCreateRequest, user: Dict[str, Any] = Depends(get_current_tg_user)):
     if not payload.items:
@@ -294,7 +298,14 @@ async def create_order(payload: OrderCreateRequest, user: Dict[str, Any] = Depen
         payment_method = (payload.paymentMethod or "manual").lower()
 
         raw_items = [{"id": it.id, "qty": it.qty} for it in payload.items]
-        order_data, verified_items = db.create_secure_order(buyer_id, buyer_name, buyer_username, raw_items)
+        order_data, verified_items = db.create_secure_order(
+            buyer_id=buyer_id, 
+            buyer_name=buyer_name, 
+            buyer_username=buyer_username, 
+            client_items=raw_items,
+            promo_code=payload.promoCode or "",
+            use_bonus=payload.useBonus or 0
+        )
         order_code = order_data["orderId"]
         total_rub = order_data["totalRub"]
 
@@ -331,7 +342,7 @@ async def create_order(payload: OrderCreateRequest, user: Dict[str, Any] = Depen
                 bot_token=BOT_TOKEN,
                 order_code=order_code,
                 title=f"Заказ #{order_code}",
-                description=f"Оплата товаров в {store_title} ({len(verified_items)} поз.)",
+                description=f"Оплата в {store_title} ({len(verified_items)} поз.)",
                 stars_amount=stars_amount
             )
             if invoice_link:
@@ -450,14 +461,141 @@ async def remove_category(cat_id: str, admin: Dict[str, Any] = Depends(require_a
     success = db.delete_category(cat_id)
     return {"ok": success}
 
-# сохранение общих настроек шопа
+# сохранение общих настроек
 @router.post("/settings")
 async def update_settings(settings: SettingsUpdate, admin: Dict[str, Any] = Depends(require_admin)):
     if settings.storeTitle:
         db.set_setting("store_title", settings.storeTitle)
     if settings.botUsername:
         db.set_setting("tg_bot_handle", settings.botUsername.replace("@", ""))
+    if settings.refPercent is not None:
+        db.set_setting("ref_percent", str(settings.refPercent))
     return {"ok": True}
+
+# --- АДМИНКА: СКЛАД ЦИФРОВЫХ КЛЮЧЕЙ (АВТОВЫДАЧА) ---
+@router.get("/admin/stock/{product_id}")
+async def get_stock(product_id: str, admin: Dict[str, Any] = Depends(require_admin)):
+    stock_items = db.get_product_stock(product_id)
+    return {"ok": True, "stock": stock_items}
+
+@router.post("/admin/stock/{product_id}")
+async def add_stock(product_id: str, payload: StockAddRequest, admin: Dict[str, Any] = Depends(require_admin)):
+    added_count = db.add_product_stock(product_id, payload.keys)
+    return {"ok": True, "addedCount": added_count}
+
+# --- АДМИНКА: ПРОМОКОДЫ ---
+@router.get("/admin/promos")
+async def list_promos(admin: Dict[str, Any] = Depends(require_admin)):
+    promos = db.get_all_promos()
+    return {"ok": True, "promos": promos}
+
+@router.post("/admin/promos")
+async def create_promo_endpoint(payload: PromoCreateRequest, admin: Dict[str, Any] = Depends(require_admin)):
+    res = db.create_promo_code(
+        code=payload.code,
+        discount_type=payload.discountType,
+        discount_val=payload.discountVal,
+        min_order=payload.minOrder or 0,
+        max_uses=payload.maxUses or 0
+    )
+    return {"ok": True, "promo": res}
+
+@router.delete("/admin/promos/{code}")
+async def delete_promo_endpoint(code: str, admin: Dict[str, Any] = Depends(require_admin)):
+    success = db.delete_promo_code(code)
+    return {"ok": success}
+
+# --- АДМИНКА: РАССЫЛКА ПО БАЗЕ ПОЛЬЗОВАТЕЛЕЙ ---
+@router.post("/admin/broadcast")
+async def broadcast_message(payload: BroadcastRequest, admin: Dict[str, Any] = Depends(require_admin)):
+    if not BOT_TOKEN or "YOUR_BOT_TOKEN" in BOT_TOKEN:
+        raise HTTPException(status_code=400, detail="Токен бота не настроен")
+
+    users = db.get_all_bot_users()
+    if not users:
+        return {"ok": True, "sent": 0, "total": 0, "message": "В базе пока нет пользователей"}
+
+    import telebot
+    from telebot import types
+    tg_bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
+
+    markup = None
+    if payload.buttonText and payload.buttonUrl:
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton(payload.buttonText, url=payload.buttonUrl))
+
+    sent_count = 0
+    fail_count = 0
+
+    for u in users:
+        uid = u["userId"]
+        try:
+            if payload.imageUrl and payload.imageUrl.startswith("http"):
+                tg_bot.send_photo(uid, payload.imageUrl, caption=payload.text, reply_markup=markup)
+            else:
+                tg_bot.send_message(uid, payload.text, reply_markup=markup)
+            sent_count += 1
+            await asyncio.sleep(0.05) # защита от лимитов telegram
+        except Exception:
+            fail_count += 1
+
+    return {
+        "ok": True,
+        "sent": sent_count,
+        "failed": fail_count,
+        "total": len(users)
+    }
+
+# --- АДМИНКА: ПЛАТЕЖНЫЕ НАСТРОЙКИ ---
+@router.get("/admin/payment-settings")
+async def get_admin_payment_settings(admin: Dict[str, Any] = Depends(require_admin)):
+    return {
+        "ok": True,
+        "cryptobotEnabled": db.get_setting("cryptobot_enabled", "false") == "true",
+        "cryptobotToken": db.get_setting("cryptobot_token", os.environ.get("CRYPTOBOT_TOKEN", "")),
+        "starsEnabled": db.get_setting("stars_enabled", "true") == "true",
+        "starsRate": float(db.get_setting("stars_rate", "2.0")),
+        "aaioEnabled": db.get_setting("aaio_enabled", "false") == "true",
+        "aaioMerchantId": db.get_setting("aaio_merchant_id", os.environ.get("AAIO_MERCHANT_ID", "")),
+        "aaioSecret1": db.get_setting("aaio_secret_1", os.environ.get("AAIO_SECRET_1", "")),
+        "aaioSecret2": db.get_setting("aaio_secret_2", os.environ.get("AAIO_SECRET_2", "")),
+        "sbpEnabled": db.get_setting("sbp_enabled", "true") == "true",
+        "sbpPhone": db.get_setting("sbp_phone", ""),
+        "sbpBank": db.get_setting("sbp_bank", "СБП"),
+        "sbpRecipient": db.get_setting("sbp_recipient", "")
+    }
+
+@router.post("/admin/payment-settings")
+async def save_admin_payment_settings(payload: PaymentSettingsUpdate, admin: Dict[str, Any] = Depends(require_admin)):
+    if payload.cryptobotEnabled is not None:
+        db.set_setting("cryptobot_enabled", "true" if payload.cryptobotEnabled else "false")
+    if payload.cryptobotToken is not None:
+        db.set_setting("cryptobot_token", payload.cryptobotToken.strip())
+        
+    if payload.starsEnabled is not None:
+        db.set_setting("stars_enabled", "true" if payload.starsEnabled else "false")
+    if payload.starsRate is not None:
+        db.set_setting("stars_rate", str(payload.starsRate))
+        
+    if payload.aaioEnabled is not None:
+        db.set_setting("aaio_enabled", "true" if payload.aaioEnabled else "false")
+    if payload.aaioMerchantId is not None:
+        db.set_setting("aaio_merchant_id", payload.aaioMerchantId.strip())
+    if payload.aaioSecret1 is not None:
+        db.set_setting("aaio_secret_1", payload.aaioSecret1.strip())
+    if payload.aaioSecret2 is not None:
+        db.set_setting("aaio_secret_2", payload.aaioSecret2.strip())
+        
+    if payload.sbpEnabled is not None:
+        db.set_setting("sbp_enabled", "true" if payload.sbpEnabled else "false")
+    if payload.sbpPhone is not None:
+        db.set_setting("sbp_phone", payload.sbpPhone.strip())
+    if payload.sbpBank is not None:
+        db.set_setting("sbp_bank", payload.sbpBank.strip())
+    if payload.sbpRecipient is not None:
+        db.set_setting("sbp_recipient", payload.sbpRecipient.strip())
+
+    return {"ok": True, "message": "Настройки сохранены"}
 
 # вебхук CryptoBot
 @router.post("/payments/cryptobot/webhook")
@@ -507,13 +645,41 @@ async def aaio_webhook(request: Request):
         logger.error(f"ошибка aaio webhook: {e}")
         return "ERROR"
 
-# уведомление об успешной оплате
+# --- ОБРАБОТКА ОПЛАТЫ И АВТОВЫДАЧА ТОВАРОВ ---
 def notify_order_paid(order_code: str, payment_source: str, payment_id: Optional[str] = None):
     order = db.get_order(order_code)
     if not order:
         return
 
+    # меняем статус заказа
     db.mark_order_paid(order_code, payment_id)
+
+    # автовыдача ключей из пула склада
+    delivered_keys = db.pop_keys_for_order(order_code, order.get("items", []))
+
+    # начисление реферального бонуса пригласителю
+    buyer_id = order.get("buyerId")
+    total_rub = order.get("totalRub", 0)
+    ref_percent = int(db.get_setting("ref_percent", "5"))
+
+    if buyer_id:
+        referrer_id = db.get_referrer_for_user(buyer_id)
+        if referrer_id and total_rub > 0:
+            reward = int(round(total_rub * (ref_percent / 100.0)))
+            if reward > 0:
+                db.add_referral_bonus(referrer_id, reward)
+                if BOT_TOKEN and "YOUR_BOT_TOKEN" not in BOT_TOKEN:
+                    try:
+                        import telebot
+                        tg_bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
+                        tg_bot.send_message(
+                            referrer_id,
+                            f"🎁 <b>Вам начислен реферальный бонус!</b>\n\n"
+                            f"💰 <b>+{reward} ₽</b> за покупку приглашенного друга\n"
+                            f"Вы можете оплатить этими бонусами свой следующий заказ"
+                        )
+                    except Exception:
+                        pass
 
     if not BOT_TOKEN or "YOUR_BOT_TOKEN" in BOT_TOKEN:
         return
@@ -521,29 +687,37 @@ def notify_order_paid(order_code: str, payment_source: str, payment_id: Optional
     try:
         import telebot
         tg_bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
-        buyer_id = order.get("buyerId")
-        total_rub = order.get("totalRub", 0)
 
-        # сообщение покупателю
+        # форматируем ключи для выдачи
+        keys_text = ""
+        if delivered_keys:
+            keys_text = "\n\n⚡ <b>ВАШИ КУПЛЕННЫЕ КЛЮЧИ / ДАННЫЕ:</b>\n"
+            for dk in delivered_keys:
+                keys_text += f"\n📦 <b>{dk['productName']}:</b>\n"
+                for k in dk["keys"]:
+                    keys_text += f"<code>{k}</code>\n"
+
+        # сообщение клиенту
         if buyer_id:
             try:
-                tg_bot.send_message(
-                    buyer_id,
+                buyer_msg = (
                     f"🎉 <b>Заказ #{order_code} успешно оплачен!</b>\n\n"
                     f"💳 <b>Способ:</b> {payment_source}\n"
-                    f"💵 <b>Сумма:</b> {total_rub:,} ₽\n\n"
-                    f"📦 Товары уже обрабатываются и скоро будут отправлены сюда в диалог"
+                    f"💵 <b>Сумма:</b> {total_rub:,} ₽"
+                    f"{keys_text}\n\n"
+                    f"✨ Купленные ключи также сохранены в вашем приложении во вкладке «Мои покупки»"
                 )
+                tg_bot.send_message(buyer_id, buyer_msg)
             except Exception as e:
-                logger.warning(f"не удалось отправить уведомление об оплате клиенту: {e}")
+                logger.warning(f"не удалось отправить чек клиенту: {e}")
 
         # сообщение админам
         admin_msg = (
             f"💰 <b>ПОЛУЧЕНА ОПЛАТА ПО ЗАКАЗУ #{order_code}</b>\n\n"
             f"👤 <b>Клиент:</b> {order.get('buyerName')} (@{order.get('buyerUsername')})\n"
             f"💵 <b>Сумма:</b> <code>{total_rub:,} ₽</code>\n"
-            f"💳 <b>Платежка:</b> {payment_source}\n"
-            f"⚡ <b>Статус:</b> Оплачен"
+            f"💳 <b>Способ:</b> {payment_source}\n"
+            f"⚡ <b>Автовыдача:</b> {'Выдано ' + str(len(delivered_keys)) + ' поз.' if delivered_keys else 'Ручная выдача'}"
         )
         for adm in ADMIN_IDS:
             if adm.isdigit():
@@ -554,7 +728,7 @@ def notify_order_paid(order_code: str, payment_source: str, payment_id: Optional
     except Exception as e:
         logger.error(f"ошибка отправки уведомления об оплате: {e}")
 
-# обработка вебхука бота (включая Stars)
+# обработка вебхука бота (включая Stars и /start ref_...)
 @router.post("/webhook")
 async def telegram_webhook(request: Request):
     if not BOT_TOKEN or "YOUR_BOT_TOKEN" in BOT_TOKEN:
@@ -566,12 +740,12 @@ async def telegram_webhook(request: Request):
         update_json = await request.json()
         update = telebot.types.Update.de_json(update_json)
 
-        # 1. Pre-checkout query для Telegram Stars
+        # 1. Pre-checkout query для Stars
         if update.pre_checkout_query:
             tg_bot.answer_pre_checkout_query(update.pre_checkout_query.id, ok=True)
             return {"ok": True}
 
-        # 2. Обычные сообщения и успешная оплата
+        # 2. Сообщения
         if update.message:
             msg = update.message
             
@@ -584,6 +758,22 @@ async def telegram_webhook(request: Request):
                 return {"ok": True}
 
             if msg.text and msg.text.startswith("/start"):
+                # проверяем реферальный код
+                referrer_id = None
+                parts = msg.text.split()
+                if len(parts) > 1 and parts[1].startswith("ref_"):
+                    ref_str = parts[1].replace("ref_", "")
+                    if ref_str.isdigit():
+                        referrer_id = int(ref_str)
+
+                # сохраняем пользователя
+                db.register_bot_user(
+                    user_id=msg.chat.id,
+                    username=msg.from_user.username or "",
+                    first_name=msg.from_user.first_name or "",
+                    referrer_id=referrer_id
+                )
+
                 webapp_url = os.environ.get("WEBAPP_URL", "https://shopik234.vercel.app")
                 markup = telebot.types.InlineKeyboardMarkup()
                 markup.add(telebot.types.InlineKeyboardButton("🎮 Открыть магазин", web_app=telebot.types.WebAppInfo(url=webapp_url)))
@@ -610,7 +800,7 @@ async def telegram_webhook(request: Request):
         logger.error(f"ошибка обработки вебхука: {e}")
         return {"ok": False, "error": str(e)}
 
-# отправка чеков и уведомлений о заказе
+# отправка чеков и уведомлений о новом заказе
 def send_order_bot_notifications(order_data: Dict[str, Any], verified_items: List[Dict[str, Any]], payment_result: Dict[str, Any]):
     if not BOT_TOKEN or "YOUR_BOT_TOKEN" in BOT_TOKEN:
         return
@@ -627,16 +817,16 @@ def send_order_bot_notifications(order_data: Dict[str, Any], verified_items: Lis
         total_rub = order_data["totalRub"]
         total_count = order_data["totalCount"]
         pm_method = payment_result.get("method", "manual")
+        discount_rub = order_data.get("discountRub", 0)
+        bonus_used = order_data.get("bonusUsed", 0)
 
         if buyer_id:
             order_buyers_cache[order_id] = buyer_id
 
-        # форматируем список товаров
         items_text = ""
         for i, it in enumerate(verified_items, start=1):
             items_text += f"{i}. <b>{it['name']}</b>: {it['qty']} шт × {it['price']:,} ₽ = <b>{it['subtotal']:,} ₽</b>\n"
 
-        # название метода оплаты для чека
         pm_titles = {
             "cryptobot": "💎 CryptoBot (USDT / TON)",
             "stars": "⭐ Telegram Stars",
@@ -646,12 +836,19 @@ def send_order_bot_notifications(order_data: Dict[str, Any], verified_items: Lis
         }
         pm_title = pm_titles.get(pm_method, pm_method)
 
+        extra_info = ""
+        if discount_rub > 0:
+            extra_info += f"🎟️ Скидка по промокоду: -{discount_rub:,} ₽\n"
+        if bonus_used > 0:
+            extra_info += f"🎁 Бонусы списаны: -{bonus_used:,} ₽\n"
+
         # чек покупателю
         if buyer_id:
             try:
                 buyer_receipt = (
                     f"✅ <b>Заказ #{order_id} принят</b>\n\n"
                     f"📦 <b>Товары:</b>\n{items_text}\n"
+                    f"{extra_info}"
                     f"💵 <b>Сумма к оплате:</b> <code>{total_rub:,} ₽</code>\n"
                     f"💳 <b>Выбранный способ:</b> {pm_title}\n\n"
                     f"⏳ Ожидайте подтверждения или перейдите к оплате в окне магазина"
@@ -666,14 +863,15 @@ def send_order_bot_notifications(order_data: Dict[str, Any], verified_items: Lis
             f"👤 <b>Покупатель:</b> {buyer_name} ({buyer_username})\n"
             f"🆔 <b>ID клиента:</b> <code>{buyer_id}</code>\n\n"
             f"📦 <b>Товары ({total_count} шт):</b>\n{items_text}\n"
+            f"{extra_info}"
             f"💵 <b>Сумма к оплате:</b> <code>{total_rub:,} ₽</code>\n"
             f"💳 <b>Способ оплаты:</b> {pm_title}\n\n"
             f"💡 <i>Ответьте через Reply на это сообщение</i>"
         )
 
         admin_markup = types.InlineKeyboardMarkup(row_width=2)
-        done_btn = types.InlineKeyboardButton("✅ Заказ выполнен", callback_data=f"done_{order_id}")
-        paid_btn = types.InlineKeyboardButton("💰 Отметить оплаченным", callback_data=f"paid_{order_id}")
+        done_btn = types.InlineKeyboardButton("✅ Выполнен", callback_data=f"done_{order_id}")
+        paid_btn = types.InlineKeyboardButton("💰 Оплачен (Автовыдача)", callback_data=f"paid_{order_id}")
         admin_markup.add(paid_btn, done_btn)
 
         for adm in ADMIN_IDS:
@@ -708,6 +906,20 @@ def run_bot_listener():
 
         @tg_bot.message_handler(commands=['start'])
         def on_start(msg):
+            referrer_id = None
+            parts = msg.text.split()
+            if len(parts) > 1 and parts[1].startswith("ref_"):
+                ref_str = parts[1].replace("ref_", "")
+                if ref_str.isdigit():
+                    referrer_id = int(ref_str)
+
+            db.register_bot_user(
+                user_id=msg.chat.id,
+                username=msg.from_user.username or "",
+                first_name=msg.from_user.first_name or "",
+                referrer_id=referrer_id
+            )
+
             webapp_url = os.environ.get("WEBAPP_URL", "https://shopik234.vercel.app")
             try:
                 tg_bot.set_chat_menu_button(
@@ -750,9 +962,9 @@ def run_bot_listener():
         def on_paid(call):
             order_id = call.data.replace("paid_", "")
             notify_order_paid(order_id, "Подтверждено админом вручную")
-            tg_bot.answer_callback_query(call.id, "Заказ отмечен как оплаченный")
+            tg_bot.answer_callback_query(call.id, "Заказ оплачен, ключи выданы")
             tg_bot.edit_message_text(
-                call.message.text + "\n\n<b>💰 Статус: ОПЛАЧЕН</b>",
+                call.message.text + "\n\n<b>💰 Статус: ОПЛАЧЕН (Ключи выданы)</b>",
                 chat_id=call.message.chat.id,
                 message_id=call.message.message_id
             )

@@ -1,5 +1,6 @@
 import os
 import time
+import json
 from typing import List, Dict, Any, Optional, Tuple
 
 # проверяем наличие postgres url
@@ -7,7 +8,6 @@ DB_URL = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
 IS_POSTGRES = bool(DB_URL and ("postgres://" in DB_URL or "postgresql://" in DB_URL))
 
 if IS_POSTGRES:
-    # заменяем старый префикс если нужно
     if DB_URL.startswith("postgres://"):
         DB_URL = DB_URL.replace("postgres://", "postgresql://", 1)
     import psycopg2
@@ -31,7 +31,6 @@ def get_connection():
         return conn
 
 def placeholder(sql: str) -> str:
-    # меняет ? на %s для postgres
     if IS_POSTGRES:
         return sql.replace("?", "%s")
     return sql
@@ -78,6 +77,13 @@ def init_db():
             total_rub INTEGER NOT NULL,
             total_count INTEGER NOT NULL,
             status TEXT DEFAULT 'pending',
+            payment_method TEXT DEFAULT '',
+            payment_id TEXT DEFAULT '',
+            payment_url TEXT DEFAULT '',
+            discount_rub INTEGER DEFAULT 0,
+            promo_code TEXT DEFAULT '',
+            bonus_used INTEGER DEFAULT 0,
+            delivered_keys TEXT DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """)
@@ -98,6 +104,46 @@ def init_db():
             value TEXT NOT NULL
         );
         """)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS product_stock (
+            id SERIAL PRIMARY KEY,
+            product_id TEXT NOT NULL,
+            item_data TEXT NOT NULL,
+            is_used BOOLEAN DEFAULT FALSE,
+            order_code TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS promo_codes (
+            code TEXT PRIMARY KEY,
+            discount_type TEXT NOT NULL,
+            discount_val NUMERIC NOT NULL,
+            min_order INTEGER DEFAULT 0,
+            max_uses INTEGER DEFAULT 0,
+            uses_count INTEGER DEFAULT 0,
+            is_active BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS user_referrals (
+            user_id BIGINT PRIMARY KEY,
+            referrer_id BIGINT,
+            bonus_balance INTEGER DEFAULT 0,
+            total_earned INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS bot_users (
+            user_id BIGINT PRIMARY KEY,
+            username TEXT DEFAULT '',
+            first_name TEXT DEFAULT '',
+            is_active BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
     else:
         cur.execute("""
         CREATE TABLE IF NOT EXISTS orders (
@@ -109,6 +155,13 @@ def init_db():
             total_rub INTEGER NOT NULL,
             total_count INTEGER NOT NULL,
             status TEXT DEFAULT 'pending',
+            payment_method TEXT DEFAULT '',
+            payment_id TEXT DEFAULT '',
+            payment_url TEXT DEFAULT '',
+            discount_rub INTEGER DEFAULT 0,
+            promo_code TEXT DEFAULT '',
+            bonus_used INTEGER DEFAULT 0,
+            delivered_keys TEXT DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """)
@@ -130,18 +183,60 @@ def init_db():
             value TEXT NOT NULL
         );
         """)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS product_stock (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_id TEXT NOT NULL,
+            item_data TEXT NOT NULL,
+            is_used INTEGER DEFAULT 0,
+            order_code TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS promo_codes (
+            code TEXT PRIMARY KEY,
+            discount_type TEXT NOT NULL,
+            discount_val REAL NOT NULL,
+            min_order INTEGER DEFAULT 0,
+            max_uses INTEGER DEFAULT 0,
+            uses_count INTEGER DEFAULT 0,
+            is_active INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS user_referrals (
+            user_id INTEGER PRIMARY KEY,
+            referrer_id INTEGER,
+            bonus_balance INTEGER DEFAULT 0,
+            total_earned INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS bot_users (
+            user_id INTEGER PRIMARY KEY,
+            username TEXT DEFAULT '',
+            first_name TEXT DEFAULT '',
+            is_active INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
 
-        # добавляем новые поля если их нет
+    # миграции колонок если старая бд
+    cols_to_add = [
+        ("orders", "payment_method", "TEXT DEFAULT ''"),
+        ("orders", "payment_id", "TEXT DEFAULT ''"),
+        ("orders", "payment_url", "TEXT DEFAULT ''"),
+        ("orders", "discount_rub", "INTEGER DEFAULT 0"),
+        ("orders", "promo_code", "TEXT DEFAULT ''"),
+        ("orders", "bonus_used", "INTEGER DEFAULT 0"),
+        ("orders", "delivered_keys", "TEXT DEFAULT ''")
+    ]
+    for tbl, col, ctype in cols_to_add:
         try:
-            cur.execute("ALTER TABLE orders ADD COLUMN payment_method TEXT DEFAULT '';")
-        except Exception:
-            pass
-        try:
-            cur.execute("ALTER TABLE orders ADD COLUMN payment_id TEXT DEFAULT '';")
-        except Exception:
-            pass
-        try:
-            cur.execute("ALTER TABLE orders ADD COLUMN payment_url TEXT DEFAULT '';")
+            cur.execute(f"ALTER TABLE {tbl} ADD COLUMN {col} {ctype};")
         except Exception:
             pass
 
@@ -156,7 +251,7 @@ def init_db():
         conn.commit()
     conn.close()
 
-# работа с категориями
+# --- КАТЕГОРИИ ---
 def get_categories() -> List[Dict[str, Any]]:
     conn = get_connection()
     cur = conn.cursor()
@@ -186,7 +281,7 @@ def delete_category(cat_id: str) -> bool:
     conn.close()
     return True
 
-# работа с товарами
+# --- ТОВАРЫ ---
 def get_products(category_id: Optional[str] = None, search: Optional[str] = None) -> List[Dict[str, Any]]:
     conn = get_connection()
     cur = conn.cursor()
@@ -208,6 +303,13 @@ def get_products(category_id: Optional[str] = None, search: Optional[str] = None
     query += " ORDER BY created_at DESC;"
     cur.execute(placeholder(query), tuple(params))
     rows = [dict(r) for r in cur.fetchall()]
+    
+    # подтягиваем остаток ключей на складе
+    for p in rows:
+        cur.execute(placeholder("SELECT COUNT(*) as cnt FROM product_stock WHERE product_id = ? AND (is_used = FALSE OR is_used = 0);"), (p["id"],))
+        s_res = cur.fetchone()
+        p["stockCount"] = s_res["cnt"] if (isinstance(s_res, dict) or hasattr(s_res, "keys")) else s_res[0]
+        
     conn.close()
     return rows
 
@@ -219,8 +321,15 @@ def get_product(prod_id: str) -> Optional[Dict[str, Any]]:
     FROM products WHERE id = ?;
     """), (prod_id,))
     row = cur.fetchone()
+    if not row:
+        conn.close()
+        return None
+    res = dict(row)
+    cur.execute(placeholder("SELECT COUNT(*) as cnt FROM product_stock WHERE product_id = ? AND (is_used = FALSE OR is_used = 0);"), (prod_id,))
+    s_res = cur.fetchone()
+    res["stockCount"] = s_res["cnt"] if (isinstance(s_res, dict) or hasattr(s_res, "keys")) else s_res[0]
     conn.close()
-    return dict(row) if row else None
+    return res
 
 def create_product(name: str, category_id: str, price: int, old_price: int, badge: str, image_url: str, description: str) -> Dict[str, Any]:
     conn = get_connection()
@@ -241,7 +350,8 @@ def create_product(name: str, category_id: str, price: int, old_price: int, badg
         "oldPrice": old_price,
         "badge": badge,
         "img": image_url,
-        "desc": description
+        "desc": description,
+        "stockCount": 0
     }
 
 def update_product(prod_id: str, name: str, category_id: str, price: int, old_price: int, badge: str, image_url: str, description: str) -> Optional[Dict[str, Any]]:
@@ -261,13 +371,284 @@ def delete_product(prod_id: str) -> bool:
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(placeholder("DELETE FROM products WHERE id = ?;"), (prod_id,))
+    cur.execute(placeholder("DELETE FROM product_stock WHERE product_id = ?;"), (prod_id,))
     if not IS_POSTGRES:
         conn.commit()
     conn.close()
     return True
 
-# расчет и сохранение заказа
-def create_secure_order(buyer_id: Optional[int], buyer_name: str, buyer_username: str, client_items: List[Dict[str, Any]]) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
+# --- АВТОВЫДАЧА / СКЛАД ЦИФРОВЫХ КЛЮЧЕЙ ---
+def add_product_stock(product_id: str, items: List[str]) -> int:
+    if not items:
+        return 0
+    conn = get_connection()
+    cur = conn.cursor()
+    added = 0
+    for item in items:
+        cleaned = item.strip()
+        if cleaned:
+            cur.execute(placeholder("""
+            INSERT INTO product_stock (product_id, item_data, is_used) VALUES (?, ?, FALSE);
+            """ if IS_POSTGRES else """
+            INSERT INTO product_stock (product_id, item_data, is_used) VALUES (?, ?, 0);
+            """), (product_id, cleaned))
+            added += 1
+    if not IS_POSTGRES:
+        conn.commit()
+    conn.close()
+    return added
+
+def get_product_stock(product_id: str) -> List[Dict[str, Any]]:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(placeholder("""
+    SELECT id, product_id, item_data as "itemData", is_used as "isUsed", order_code as "orderCode", created_at as "createdAt"
+    FROM product_stock WHERE product_id = ? ORDER BY id DESC;
+    """), (product_id,))
+    rows = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    return rows
+
+def pop_keys_for_order(order_code: str, items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    conn = get_connection()
+    cur = conn.cursor()
+    delivered = []
+    
+    for it in items:
+        prod_id = str(it["productId"] if "productId" in it else it.get("product_id", ""))
+        qty = int(it.get("qty", 1))
+        prod_name = it.get("name") or it.get("product_name", "")
+        
+        # выбираем свободные ключи
+        cur.execute(placeholder("""
+        SELECT id, item_data FROM product_stock
+        WHERE product_id = ? AND (is_used = FALSE OR is_used = 0)
+        ORDER BY id ASC LIMIT ?;
+        """), (prod_id, qty))
+        stock_rows = cur.fetchall()
+        
+        keys_for_item = []
+        for s in stock_rows:
+            s_dict = dict(s)
+            s_id = s_dict["id"]
+            k_data = s_dict["item_data"]
+            keys_for_item.append(k_data)
+            cur.execute(placeholder("""
+            UPDATE product_stock SET is_used = TRUE, order_code = ? WHERE id = ?;
+            """ if IS_POSTGRES else """
+            UPDATE product_stock SET is_used = 1, order_code = ? WHERE id = ?;
+            """), (order_code, s_id))
+            
+        if keys_for_item:
+            delivered.append({
+                "productId": prod_id,
+                "productName": prod_name,
+                "keys": keys_for_item
+            })
+            
+    if delivered:
+        cur.execute(placeholder("UPDATE orders SET delivered_keys = ? WHERE order_code = ?;"), (json.dumps(delivered, ensure_ascii=False), order_code))
+        
+    if not IS_POSTGRES:
+        conn.commit()
+    conn.close()
+    return delivered
+
+# --- ПРОМОКОДЫ ---
+def create_promo_code(code: str, discount_type: str, discount_val: float, min_order: int = 0, max_uses: int = 0) -> Dict[str, Any]:
+    conn = get_connection()
+    cur = conn.cursor()
+    c_clean = code.strip().upper()
+    cur.execute(placeholder("""
+    INSERT INTO promo_codes (code, discount_type, discount_val, min_order, max_uses, uses_count, is_active)
+    VALUES (?, ?, ?, ?, ?, 0, TRUE)
+    ON CONFLICT (code) DO UPDATE SET discount_type = EXCLUDED.discount_type, discount_val = EXCLUDED.discount_val;
+    """ if IS_POSTGRES else """
+    INSERT OR REPLACE INTO promo_codes (code, discount_type, discount_val, min_order, max_uses, uses_count, is_active)
+    VALUES (?, ?, ?, ?, ?, 0, 1);
+    """), (c_clean, discount_type, discount_val, min_order, max_uses))
+    if not IS_POSTGRES:
+        conn.commit()
+    conn.close()
+    return {"code": c_clean, "discountType": discount_type, "discountVal": discount_val}
+
+def delete_promo_code(code: str) -> bool:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(placeholder("DELETE FROM promo_codes WHERE code = ?;"), (code.strip().upper(),))
+    if not IS_POSTGRES:
+        conn.commit()
+    conn.close()
+    return True
+
+def get_all_promos() -> List[Dict[str, Any]]:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+    SELECT code, discount_type as "discountType", discount_val as "discountVal", 
+           min_order as "minOrder", max_uses as "maxUses", uses_count as "usesCount", is_active as "isActive"
+    FROM promo_codes ORDER BY created_at DESC;
+    """)
+    rows = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    return rows
+
+def validate_promo(code: str, total_rub: int) -> Tuple[bool, str, int]:
+    if not code:
+        return False, "Код не указан", 0
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(placeholder("SELECT * FROM promo_codes WHERE code = ?;"), (code.strip().upper(),))
+    row = cur.fetchone()
+    conn.close()
+    if not row:
+        return False, "Промокод не найден", 0
+    p = dict(row)
+    if not p.get("is_active"):
+        return False, "Промокод не активен", 0
+    if p.get("max_uses", 0) > 0 and p.get("uses_count", 0) >= p.get("max_uses", 0):
+        return False, "Лимит использования промокода исчерпан", 0
+    if total_rub < p.get("min_order", 0):
+        return False, f"Минимальная сумма для промокода: {p.get('min_order')} ₽", 0
+
+    discount_type = p["discount_type"]
+    discount_val = float(p["discount_val"])
+    discount_rub = 0
+    if discount_type == "percent":
+        discount_rub = int(round(total_rub * (discount_val / 100.0)))
+    else:
+        discount_rub = int(round(discount_val))
+    discount_rub = min(discount_rub, total_rub)
+    return True, "Промокод применен", discount_rub
+
+def increment_promo_use(code: str):
+    if not code:
+        return
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(placeholder("UPDATE promo_codes SET uses_count = uses_count + 1 WHERE code = ?;"), (code.strip().upper(),))
+    if not IS_POSTGRES:
+        conn.commit()
+    conn.close()
+
+# --- ПОЛЬЗОВАТЕЛИ И РЕФЕРАЛЫ ---
+def register_bot_user(user_id: int, username: str = "", first_name: str = "", referrer_id: Optional[int] = None):
+    if not user_id:
+        return
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    # сохраняем в bot_users
+    if IS_POSTGRES:
+        cur.execute("""
+        INSERT INTO bot_users (user_id, username, first_name)
+        VALUES (%s, %s, %s)
+        ON CONFLICT (user_id) DO UPDATE SET username = EXCLUDED.username, first_name = EXCLUDED.first_name, is_active = TRUE;
+        """, (user_id, username, first_name))
+    else:
+        cur.execute("""
+        INSERT OR REPLACE INTO bot_users (user_id, username, first_name, is_active)
+        VALUES (?, ?, ?, 1);
+        """, (user_id, username, first_name))
+
+    # проверяем реферала
+    cur.execute(placeholder("SELECT user_id FROM user_referrals WHERE user_id = ?;"), (user_id,))
+    if not cur.fetchone():
+        ref_id = referrer_id if (referrer_id and referrer_id != user_id) else None
+        cur.execute(placeholder("""
+        INSERT INTO user_referrals (user_id, referrer_id, bonus_balance, total_earned)
+        VALUES (?, ?, 0, 0);
+        """), (user_id, ref_id))
+
+    if not IS_POSTGRES:
+        conn.commit()
+    conn.close()
+
+def get_user_profile(user_id: int) -> Dict[str, Any]:
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    cur.execute(placeholder("SELECT bonus_balance as \"bonusBalance\", total_earned as \"totalEarned\" FROM user_referrals WHERE user_id = ?;"), (user_id,))
+    ref_row = cur.fetchone()
+    bonus_balance = ref_row["bonusBalance"] if ref_row else 0
+    total_earned = ref_row["totalEarned"] if ref_row else 0
+    
+    # считаем приглашенных друзей
+    cur.execute(placeholder("SELECT COUNT(*) as cnt FROM user_referrals WHERE referrer_id = ?;"), (user_id,))
+    cnt_row = cur.fetchone()
+    invited_count = cnt_row["cnt"] if (isinstance(cnt_row, dict) or hasattr(cnt_row, "keys")) else (cnt_row[0] if cnt_row else 0)
+    
+    # считаем выполненные заказы
+    cur.execute(placeholder("SELECT COUNT(*) as cnt, COALESCE(SUM(total_rub), 0) as total_spent FROM orders WHERE buyer_id = ? AND status = 'paid';"), (user_id,))
+    ord_row = cur.fetchone()
+    orders_count = ord_row["cnt"] if (isinstance(ord_row, dict) or hasattr(ord_row, "keys")) else ord_row[0]
+    total_spent = ord_row["total_spent"] if (isinstance(ord_row, dict) or hasattr(ord_row, "keys")) else ord_row[1]
+    
+    conn.close()
+    return {
+        "userId": user_id,
+        "bonusBalance": bonus_balance,
+        "totalEarned": total_earned,
+        "invitedCount": invited_count,
+        "ordersCount": orders_count,
+        "totalSpent": total_spent
+    }
+
+def add_referral_bonus(user_id: int, bonus_rub: int):
+    if not user_id or bonus_rub <= 0:
+        return
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(placeholder("""
+    UPDATE user_referrals
+    SET bonus_balance = bonus_balance + ?, total_earned = total_earned + ?
+    WHERE user_id = ?;
+    """), (bonus_rub, bonus_rub, user_id))
+    if not IS_POSTGRES:
+        conn.commit()
+    conn.close()
+
+def deduct_referral_bonus(user_id: int, amount_rub: int):
+    if not user_id or amount_rub <= 0:
+        return
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(placeholder("""
+    UPDATE user_referrals
+    SET bonus_balance = MAX(0, bonus_balance - ?)
+    WHERE user_id = ?;
+    """), (amount_rub, user_id))
+    if not IS_POSTGRES:
+        conn.commit()
+    conn.close()
+
+def get_referrer_for_user(user_id: int) -> Optional[int]:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(placeholder("SELECT referrer_id FROM user_referrals WHERE user_id = ?;"), (user_id,))
+    row = cur.fetchone()
+    conn.close()
+    if row and row["referrer_id"]:
+        return int(row["referrer_id"])
+    return None
+
+def get_all_bot_users() -> List[Dict[str, Any]]:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT user_id as \"userId\", username, first_name as \"firstName\" FROM bot_users WHERE is_active = TRUE;")
+    rows = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    return rows
+
+# --- ЗАКАЗЫ ---
+def create_secure_order(
+    buyer_id: Optional[int], 
+    buyer_name: str, 
+    buyer_username: str, 
+    client_items: List[Dict[str, Any]],
+    promo_code: str = "",
+    use_bonus: int = 0
+) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
     if not client_items:
         raise ValueError("корзина пуста")
 
@@ -276,7 +657,7 @@ def create_secure_order(buyer_id: Optional[int], buyer_name: str, buyer_username
 
     order_code = f"NVX-{int(time.time() * 1000) % 1000000:06d}"
     verified_items = []
-    total_rub = 0
+    subtotal_rub = 0
     total_count = 0
 
     for it in client_items:
@@ -285,7 +666,6 @@ def create_secure_order(buyer_id: Optional[int], buyer_name: str, buyer_username
         if qty <= 0:
             continue
 
-        # берем актуальную цену прямо из базы
         cur.execute(placeholder("SELECT id, name, price, image_url FROM products WHERE id = ?;"), (prod_id,))
         p = cur.fetchone()
         if not p:
@@ -293,7 +673,7 @@ def create_secure_order(buyer_id: Optional[int], buyer_name: str, buyer_username
 
         actual_price = int(p["price"])
         subtotal = actual_price * qty
-        total_rub += subtotal
+        subtotal_rub += subtotal
         total_count += qty
 
         verified_items.append({
@@ -305,23 +685,51 @@ def create_secure_order(buyer_id: Optional[int], buyer_name: str, buyer_username
             "img": p["image_url"]
         })
 
-    if not verified_items or total_rub <= 0:
+    if not verified_items or subtotal_rub <= 0:
         conn.close()
         raise ValueError("выбранные товары не найдены")
+
+    # расчет скидки по промокоду
+    discount_rub = 0
+    valid_promo = ""
+    if promo_code:
+        ok, msg, disc = validate_promo(promo_code, subtotal_rub)
+        if ok:
+            discount_rub = disc
+            valid_promo = promo_code.strip().upper()
+
+    # расчет бонусов
+    actual_bonus_used = 0
+    if buyer_id and use_bonus > 0:
+        cur.execute(placeholder("SELECT bonus_balance FROM user_referrals WHERE user_id = ?;"), (buyer_id,))
+        b_row = cur.fetchone()
+        available_bonus = b_row["bonus_balance"] if b_row else 0
+        max_bonus_possible = max(0, subtotal_rub - discount_rub - 1)
+        actual_bonus_used = min(available_bonus, use_bonus, max_bonus_possible)
+
+    final_total_rub = max(1, subtotal_rub - discount_rub - actual_bonus_used)
 
     # запись заказа в бд
     if IS_POSTGRES:
         cur.execute("""
-        INSERT INTO orders (order_code, buyer_id, buyer_name, buyer_username, total_rub, total_count, status)
-        VALUES (%s, %s, %s, %s, %s, %s, 'pending') RETURNING id;
-        """, (order_code, buyer_id, buyer_name, buyer_username, total_rub, total_count))
+        INSERT INTO orders (order_code, buyer_id, buyer_name, buyer_username, total_rub, total_count, status, discount_rub, promo_code, bonus_used)
+        VALUES (%s, %s, %s, %s, %s, %s, 'pending', %s, %s, %s) RETURNING id;
+        """, (order_code, buyer_id, buyer_name, buyer_username, final_total_rub, total_count, discount_rub, valid_promo, actual_bonus_used))
         order_db_id = cur.fetchone()["id"]
     else:
         cur.execute("""
-        INSERT INTO orders (order_code, buyer_id, buyer_name, buyer_username, total_rub, total_count, status)
-        VALUES (?, ?, ?, ?, ?, ?, 'pending');
-        """, (order_code, buyer_id, buyer_name, buyer_username, total_rub, total_count))
+        INSERT INTO orders (order_code, buyer_id, buyer_name, buyer_username, total_rub, total_count, status, discount_rub, promo_code, bonus_used)
+        VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?);
+        """, (order_code, buyer_id, buyer_name, buyer_username, final_total_rub, total_count, discount_rub, valid_promo, actual_bonus_used))
         order_db_id = cur.lastrowid
+
+    # списание бонусов если использовались
+    if buyer_id and actual_bonus_used > 0:
+        deduct_referral_bonus(buyer_id, actual_bonus_used)
+
+    # учет использования промокода
+    if valid_promo:
+        increment_promo_use(valid_promo)
 
     # запись позиций заказа
     for vi in verified_items:
@@ -340,7 +748,10 @@ def create_secure_order(buyer_id: Optional[int], buyer_name: str, buyer_username
         "buyerId": buyer_id,
         "buyerName": buyer_name,
         "buyerUsername": buyer_username,
-        "totalRub": total_rub,
+        "subtotalRub": subtotal_rub,
+        "discountRub": discount_rub,
+        "bonusUsed": actual_bonus_used,
+        "totalRub": final_total_rub,
         "totalCount": total_count,
         "items": verified_items,
         "createdAt": time.strftime("%Y-%m-%d %H:%M:%S")
@@ -355,7 +766,8 @@ def get_order(order_code: str) -> Optional[Dict[str, Any]]:
     SELECT id, order_code as "orderCode", buyer_id as "buyerId", buyer_name as "buyerName", 
            buyer_username as "buyerUsername", total_rub as "totalRub", total_count as "totalCount", 
            status, payment_method as "paymentMethod", payment_id as "paymentId", payment_url as "paymentUrl", 
-           created_at as "createdAt"
+           discount_rub as "discountRub", promo_code as "promoCode", bonus_used as "bonusUsed", 
+           delivered_keys as "deliveredKeys", created_at as "createdAt"
     FROM orders WHERE order_code = ?;
     """), (order_code,))
     row = cur.fetchone()
@@ -371,6 +783,30 @@ def get_order(order_code: str) -> Optional[Dict[str, Any]]:
     order_data["items"] = [dict(r) for r in cur.fetchall()]
     conn.close()
     return order_data
+
+def get_user_orders(buyer_id: int) -> List[Dict[str, Any]]:
+    if not buyer_id:
+        return []
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(placeholder("""
+    SELECT id, order_code as "orderCode", total_rub as "totalRub", total_count as "totalCount", 
+           status, payment_method as "paymentMethod", delivered_keys as "deliveredKeys", created_at as "createdAt"
+    FROM orders WHERE buyer_id = ? ORDER BY id DESC LIMIT 50;
+    """), (buyer_id,))
+    orders = [dict(r) for r in cur.fetchall()]
+    
+    for o in orders:
+        cur.execute(placeholder("SELECT product_name as \"name\", price, qty, subtotal FROM order_items WHERE order_id = ?;"), (o["id"],))
+        o["items"] = [dict(r) for r in cur.fetchall()]
+        if o.get("deliveredKeys"):
+            try:
+                o["deliveredKeys"] = json.loads(o["deliveredKeys"])
+            except Exception:
+                pass
+                
+    conn.close()
+    return orders
 
 def update_order_payment(order_code: str, payment_method: str, payment_id: str = "", payment_url: str = "", status: str = "pending") -> bool:
     conn = get_connection()
@@ -401,19 +837,7 @@ def mark_order_paid(order_code: str, payment_id: Optional[str] = None) -> bool:
     conn.close()
     return True
 
-# сохранение и чтение настроек
-def get_all_settings() -> Dict[str, str]:
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT key, value FROM settings;")
-    rows = cur.fetchall()
-    conn.close()
-    res = {}
-    for r in rows:
-        d = dict(r)
-        res[d["key"]] = d["value"]
-    return res
-
+# --- НАСТРОЙКИ ---
 def get_setting(key: str, default: str = "") -> str:
     conn = get_connection()
     cur = conn.cursor()
@@ -437,5 +861,5 @@ def set_setting(key: str, value: str):
         conn.commit()
     conn.close()
 
-# инициализируем базу данных
+# инициализация базы данных
 init_db()
