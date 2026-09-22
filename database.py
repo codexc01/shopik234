@@ -626,9 +626,9 @@ def deduct_referral_bonus(user_id: int, amount_rub: int):
     cur = conn.cursor()
     cur.execute(placeholder("""
     UPDATE user_referrals
-    SET bonus_balance = MAX(0, bonus_balance - ?)
+    SET bonus_balance = CASE WHEN bonus_balance >= ? THEN bonus_balance - ? ELSE 0 END
     WHERE user_id = ?;
-    """), (amount_rub, user_id))
+    """), (amount_rub, amount_rub, user_id))
     if not IS_POSTGRES:
         conn.commit()
     conn.close()
