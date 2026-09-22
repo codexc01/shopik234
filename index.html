@@ -15,36 +15,64 @@
 
   <style>
     :root {
-      --bg-deep: #06070a;
-      --glass-base: rgba(255, 255, 255, 0.04);
-      --glass-card: rgba(255, 255, 255, 0.06);
-      --glass-elevated: rgba(255, 255, 255, 0.1);
-      --glass-dock: rgba(14, 16, 24, 0.72);
+      --bg-main: #0f1117;
+      --bg-card: #181a22;
+      --bg-card-hover: #1f212c;
+      --bg-elevated: #242735;
+      --bg-input: #12141c;
+      --bg-dock: rgba(22, 24, 33, 0.92);
       
-      --glass-border: rgba(255, 255, 255, 0.12);
-      --glass-border-subtle: rgba(255, 255, 255, 0.07);
-      --glass-border-glow: rgba(255, 255, 255, 0.25);
+      --border-subtle: rgba(255, 255, 255, 0.07);
+      --border-medium: rgba(255, 255, 255, 0.12);
+      --border-strong: rgba(255, 255, 255, 0.22);
       
-      --glass-highlight: inset 0 1px 1px 0 rgba(255, 255, 255, 0.2);
+      --accent-primary: #10b981;
+      --accent-hover: #059669;
+      --accent-subtle: rgba(16, 185, 129, 0.12);
+      --accent-text: #ffffff;
       
-      --liquid-aqua: #00f2fe;
-      --liquid-indigo: #4facfe;
-      --liquid-gradient: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-      --liquid-emerald: #10b981;
-      --liquid-emerald-gradient: linear-gradient(135deg, #34d399 0%, #059669 100%);
+      --text-title: #ffffff;
+      --text-body: #cbd5e1;
+      --text-muted: #828a9e;
+      --text-faint: #52586b;
       
-      --text-pure: #ffffff;
-      --text-muted: #8b92a5;
-      --text-faded: #545b70;
+      --shadow-card: 0 4px 18px rgba(0, 0, 0, 0.28);
+      --shadow-dock: 0 10px 30px rgba(0, 0, 0, 0.45);
       
-      --radius-sm: 12px;
-      --radius-md: 18px;
-      --radius-lg: 24px;
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 22px;
       --radius-pill: 9999px;
       
       --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-mono: ui-monospace, SFMono-Regular, monospace;
+    }
+
+    body.light-theme {
+      --bg-main: #f4f5f9;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f9fafb;
+      --bg-elevated: #edf0f5;
+      --bg-input: #f1f3f8;
+      --bg-dock: rgba(255, 255, 255, 0.94);
+      
+      --border-subtle: rgba(0, 0, 0, 0.06);
+      --border-medium: rgba(0, 0, 0, 0.1);
+      --border-strong: rgba(0, 0, 0, 0.18);
+      
+      --accent-primary: #059669;
+      --accent-hover: #047857;
+      --accent-subtle: rgba(5, 150, 105, 0.1);
+      --accent-text: #ffffff;
+      
+      --text-title: #111827;
+      --text-body: #374151;
+      --text-muted: #6b7280;
+      --text-faint: #9ca3af;
+      
+      --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.05);
+      --shadow-dock: 0 10px 30px rgba(0, 0, 0, 0.08);
     }
 
     * {
@@ -56,8 +84,8 @@
     }
 
     body {
-      background-color: var(--bg-deep);
-      color: var(--text-pure);
+      background-color: var(--bg-main);
+      color: var(--text-title);
       font-family: var(--font-body);
       min-height: 100vh;
       min-height: 100dvh;
@@ -65,37 +93,7 @@
       flex-direction: column;
       overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
-      position: relative;
-    }
-
-    /* Ambient Liquid Glow Orbs */
-    body::before {
-      content: '';
-      position: fixed;
-      top: -120px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 380px;
-      height: 380px;
-      background: radial-gradient(circle, rgba(79, 172, 254, 0.18) 0%, rgba(0, 242, 254, 0.08) 45%, transparent 70%);
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 0;
-      filter: blur(40px);
-    }
-
-    body::after {
-      content: '';
-      position: fixed;
-      bottom: 60px;
-      right: -80px;
-      width: 320px;
-      height: 320px;
-      background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.05) 50%, transparent 70%);
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 0;
-      filter: blur(50px);
+      transition: background-color 0.25s ease, color 0.25s ease;
     }
 
     /* Layout Wrapper */
@@ -106,12 +104,10 @@
       max-width: 480px;
       margin: 0 auto;
       width: 100%;
-      padding: 14px 16px 115px 16px;
-      position: relative;
-      z-index: 1;
+      padding: 12px 15px 105px 15px;
     }
 
-    /* Glass Header */
+    /* Header */
     header {
       display: flex;
       align-items: center;
@@ -122,35 +118,36 @@
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       cursor: pointer;
     }
 
-    .brand-icon-glass {
-      width: 38px;
-      height: 38px;
-      background: var(--liquid-gradient);
+    .brand-icon-box {
+      width: 36px;
+      height: 36px;
+      background: var(--accent-primary);
       border-radius: var(--radius-sm);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 8px 20px rgba(0, 242, 254, 0.3), var(--glass-highlight);
+      color: #fff;
     }
 
-    .brand-icon-glass svg {
+    .brand-icon-box svg {
       width: 20px;
       height: 20px;
-      fill: #031525;
+      fill: currentColor;
     }
 
     .brand-title {
       font-family: var(--font-display);
-      font-size: 18px;
+      font-size: 17.5px;
       font-weight: 800;
-      letter-spacing: -0.3px;
+      letter-spacing: -0.2px;
+      color: var(--text-title);
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .admin-pill {
@@ -158,42 +155,44 @@
       font-size: 9.5px;
       font-weight: 800;
       text-transform: uppercase;
-      background: rgba(0, 242, 254, 0.15);
-      color: var(--liquid-aqua);
-      border: 1px solid rgba(0, 242, 254, 0.4);
-      padding: 2px 8px;
+      background: var(--accent-subtle);
+      color: var(--accent-primary);
+      border: 1px solid var(--accent-primary);
+      padding: 2px 7px;
       border-radius: var(--radius-pill);
-      letter-spacing: 0.5px;
-      backdrop-filter: blur(8px);
+      letter-spacing: 0.4px;
     }
 
     body.admin-mode .admin-pill {
       display: inline-block;
     }
 
-    .btn-header-glass {
-      background: var(--glass-card);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--glass-border);
-      box-shadow: var(--glass-highlight);
-      color: var(--text-pure);
-      width: 38px;
-      height: 38px;
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-header-tool {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      width: 36px;
+      height: 36px;
       border-radius: var(--radius-sm);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.15s ease;
     }
 
-    .btn-header-glass:active {
+    .btn-header-tool:active {
       transform: scale(0.92);
-      background: var(--glass-elevated);
+      color: var(--text-title);
     }
 
-    .btn-header-glass svg {
+    .btn-header-tool svg {
       width: 18px;
       height: 18px;
       fill: currentColor;
@@ -211,62 +210,58 @@
     .view-pane {
       display: none;
       flex-direction: column;
-      animation: fluidFade 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: tabFade 0.2s ease;
     }
 
     .view-pane.active {
       display: flex;
     }
 
-    @keyframes fluidFade {
-      from { opacity: 0; transform: translateY(6px) scale(0.99); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
+    @keyframes tabFade {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Glass Search & Hero Row */
+    /* Search & Add Action */
     .search-row {
       display: flex;
-      gap: 10px;
-      margin-bottom: 14px;
+      gap: 8px;
+      margin-bottom: 12px;
     }
 
-    .search-glass-box {
+    .search-box {
       flex: 1;
-      background: var(--glass-card);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid var(--glass-border);
-      box-shadow: var(--glass-highlight);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
       display: flex;
       align-items: center;
-      padding: 0 14px;
-      height: 46px;
-      transition: all 0.2s ease;
+      padding: 0 12px;
+      height: 44px;
+      transition: border-color 0.15s ease;
     }
 
-    .search-glass-box:focus-within {
-      border-color: var(--liquid-aqua);
-      box-shadow: 0 0 16px rgba(0, 242, 254, 0.2), var(--glass-highlight);
+    .search-box:focus-within {
+      border-color: var(--border-strong);
     }
 
     .search-icon {
       color: var(--text-muted);
-      margin-right: 10px;
+      margin-right: 8px;
       display: flex;
     }
 
     .search-icon svg {
-      width: 17px;
-      height: 17px;
+      width: 16px;
+      height: 16px;
       fill: currentColor;
     }
 
     .search-input {
       background: transparent;
       border: none;
-      color: var(--text-pure);
-      font-size: 14px;
+      color: var(--text-title);
+      font-size: 13.5px;
       font-family: var(--font-body);
       width: 100%;
       outline: none;
@@ -276,37 +271,30 @@
       color: var(--text-muted);
     }
 
-    .btn-glass-add {
-      background: var(--glass-card);
-      backdrop-filter: blur(20px);
-      color: var(--liquid-aqua);
-      border: 1px dashed rgba(0, 242, 254, 0.5);
+    .btn-add-item {
+      background: var(--bg-card);
+      color: var(--accent-primary);
+      border: 1px dashed var(--accent-primary);
       border-radius: var(--radius-md);
-      padding: 0 16px;
+      padding: 0 14px;
       font-family: var(--font-display);
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 800;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
       white-space: nowrap;
-      transition: all 0.15s ease;
     }
 
-    .btn-glass-add:active {
-      transform: scale(0.95);
-      background: rgba(0, 242, 254, 0.1);
-    }
-
-    /* Categories Horizontal Bar */
+    /* Category Filter Bar */
     .categories-wrap {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       overflow-x: auto;
       padding-bottom: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       scrollbar-width: none;
     }
 
@@ -314,108 +302,102 @@
       display: none;
     }
 
-    .cat-pill {
-      background: var(--glass-card);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--glass-border-subtle);
-      box-shadow: var(--glass-highlight);
+    .cat-chip {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
       color: var(--text-muted);
-      border-radius: var(--radius-pill);
-      padding: 9px 15px;
-      font-size: 12.5px;
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      font-size: 12px;
       font-weight: 600;
       white-space: nowrap;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.15s ease;
     }
 
-    .cat-pill:active {
-      transform: scale(0.94);
+    .cat-chip:active {
+      transform: scale(0.95);
     }
 
-    .cat-pill svg {
+    .cat-chip svg {
       width: 14px;
       height: 14px;
       fill: currentColor;
     }
 
-    .cat-pill.active {
-      background: var(--glass-elevated);
-      color: var(--text-pure);
-      border-color: rgba(255, 255, 255, 0.3);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), var(--glass-highlight);
+    .cat-chip.active {
+      background: var(--bg-elevated);
+      color: var(--text-title);
+      border-color: var(--accent-primary);
     }
 
     .cat-delete-btn {
       display: none;
-      color: #ff5c5c;
-      margin-left: 4px;
+      color: #ef4444;
+      margin-left: 3px;
       font-size: 11px;
     }
 
-    body.admin-mode .cat-pill:not([data-id="all"]) .cat-delete-btn {
+    body.admin-mode .cat-chip:not([data-id="all"]) .cat-delete-btn {
       display: inline-block;
     }
 
-    .btn-add-cat-pill {
+    .btn-add-cat {
       background: transparent;
-      border: 1px dashed var(--glass-border);
+      border: 1px dashed var(--border-medium);
       color: var(--text-muted);
-      border-radius: var(--radius-pill);
-      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
     }
 
-    /* Meta Info */
+    /* Section Meta Row */
     .meta-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-size: 11px;
       font-weight: 700;
-      color: var(--text-faded);
-      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      letter-spacing: 0.4px;
       text-transform: uppercase;
-      margin-bottom: 12px;
-      padding: 0 4px;
+      margin-bottom: 10px;
+      padding: 0 2px;
     }
 
     /* Product Grid */
     .items-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
+      gap: 10px;
     }
 
-    .glass-card {
-      background: var(--glass-card);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border: 1px solid var(--glass-border);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), var(--glass-highlight);
-      border-radius: var(--radius-lg);
+    .product-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-card);
       overflow: hidden;
       display: flex;
       flex-direction: column;
       position: relative;
-      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+      transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.15s ease;
     }
 
-    .glass-card:active {
-      transform: scale(0.97);
+    .product-card:active {
+      transform: scale(0.98);
     }
 
     .card-cover {
       width: 100%;
       aspect-ratio: 16 / 10;
-      background: rgba(0, 0, 0, 0.4);
+      background: var(--bg-input);
       position: relative;
       overflow: hidden;
       display: flex;
@@ -428,78 +410,66 @@
       height: 100%;
       object-fit: cover;
       display: block;
-      transition: transform 0.3s ease;
     }
 
-    .glass-card:hover .card-img {
-      transform: scale(1.04);
-    }
-
-    .glass-badge {
+    .card-badge {
       position: absolute;
-      top: 8px;
-      left: 8px;
-      font-size: 9.5px;
+      top: 6px;
+      left: 6px;
+      font-size: 9px;
       font-weight: 800;
       text-transform: uppercase;
-      padding: 4px 8px;
-      border-radius: var(--radius-pill);
-      letter-spacing: 0.4px;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      box-shadow: var(--glass-highlight);
+      padding: 3px 6px;
+      border-radius: 5px;
+      letter-spacing: 0.3px;
       z-index: 2;
     }
 
-    .badge-hit { background: rgba(239, 68, 68, 0.85); color: #fff; }
-    .badge-sale { background: rgba(16, 185, 129, 0.85); color: #022617; }
-    .badge-new { background: rgba(59, 130, 246, 0.85); color: #fff; }
-    .badge-top { background: rgba(168, 85, 247, 0.85); color: #fff; }
+    .badge-hit { background: #ef4444; color: #fff; }
+    .badge-sale { background: var(--accent-primary); color: #fff; }
+    .badge-new { background: #3b82f6; color: #fff; }
+    .badge-top { background: #8b5cf6; color: #fff; }
 
-    .glass-stock-pill {
+    .card-stock-pill {
       position: absolute;
-      bottom: 8px;
-      left: 8px;
-      font-size: 10px;
+      bottom: 6px;
+      left: 6px;
+      font-size: 9.5px;
       font-weight: 700;
-      background: rgba(10, 12, 18, 0.78);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: #e2e8f0;
-      padding: 3px 8px;
-      border-radius: var(--radius-pill);
+      background: rgba(0, 0, 0, 0.75);
+      color: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
     }
 
     .card-body {
-      padding: 13px;
+      padding: 10px;
       display: flex;
       flex-direction: column;
       flex: 1;
     }
 
     .card-title {
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 700;
       line-height: 1.35;
       margin-bottom: 4px;
-      color: var(--text-pure);
+      color: var(--text-title);
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      min-height: 38px;
+      min-height: 36px;
     }
 
     .card-desc {
-      font-size: 11.5px;
+      font-size: 11px;
       color: var(--text-muted);
       line-height: 1.3;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -510,8 +480,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding-top: 10px;
-      border-top: 1px solid var(--glass-border-subtle);
+      padding-top: 6px;
+      border-top: 1px solid var(--border-subtle);
     }
 
     .price-group {
@@ -521,7 +491,7 @@
 
     .price-old {
       font-size: 10px;
-      color: var(--text-faded);
+      color: var(--text-faint);
       text-decoration: line-through;
       font-family: var(--font-mono);
       margin-bottom: -2px;
@@ -529,44 +499,41 @@
 
     .price-val {
       font-family: var(--font-display);
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 800;
-      color: var(--liquid-aqua);
+      color: var(--accent-primary);
     }
 
-    .btn-buy-glass {
-      background: var(--glass-elevated);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--glass-border);
-      box-shadow: var(--glass-highlight);
-      color: var(--text-pure);
-      width: 34px;
-      height: 34px;
+    .btn-buy-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-title);
+      width: 32px;
+      height: 32px;
       border-radius: var(--radius-sm);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.15s ease;
     }
 
-    .btn-buy-glass svg {
-      width: 16px;
-      height: 16px;
+    .btn-buy-card svg {
+      width: 15px;
+      height: 15px;
       fill: currentColor;
     }
 
-    .btn-buy-glass:active {
-      transform: scale(0.88);
-      background: var(--liquid-gradient);
-      color: #031525;
-      border-color: transparent;
+    .btn-buy-card:active {
+      background: var(--accent-primary);
+      color: #fff;
+      transform: scale(0.92);
     }
 
     .card-admin-box {
       position: absolute;
-      top: 8px;
-      right: 8px;
+      top: 6px;
+      right: 6px;
       display: none;
       gap: 4px;
       z-index: 3;
@@ -577,13 +544,12 @@
     }
 
     .btn-admin-pill {
-      background: rgba(10, 12, 18, 0.85);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--glass-border);
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid var(--border-medium);
       color: #fff;
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -591,28 +557,27 @@
       font-size: 11px;
     }
 
-    /* Floating Liquid Dock (Apple Glass) */
-    .liquid-dock {
+    /* Bottom Navigation Dock */
+    .nav-dock {
       position: fixed;
-      bottom: 14px;
-      left: 16px;
-      right: 16px;
-      background: var(--glass-dock);
-      backdrop-filter: blur(32px) saturate(200%);
-      -webkit-backdrop-filter: blur(32px) saturate(200%);
-      border: 1px solid var(--glass-border);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), var(--glass-highlight);
-      border-radius: var(--radius-pill);
-      padding: 8px 18px calc(8px + env(safe-area-inset-bottom, 0px)) 18px;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-dock);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border-medium);
+      box-shadow: var(--shadow-dock);
+      padding: 8px 16px calc(10px + env(safe-area-inset-bottom, 0px)) 16px;
       display: flex;
       align-items: center;
       justify-content: space-around;
       z-index: 100;
-      max-width: 448px;
+      max-width: 480px;
       margin: 0 auto;
     }
 
-    .dock-btn {
+    .dock-tab {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -621,78 +586,75 @@
       border: none;
       color: var(--text-muted);
       cursor: pointer;
-      padding: 4px 12px;
-      border-radius: var(--radius-pill);
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      transition: all 0.15s ease;
       position: relative;
     }
 
-    .dock-btn svg {
-      width: 21px;
-      height: 21px;
+    .dock-tab svg {
+      width: 20px;
+      height: 20px;
       fill: currentColor;
     }
 
-    .dock-label {
-      font-size: 10.5px;
+    .dock-tab-label {
+      font-size: 10px;
       font-weight: 700;
     }
 
-    .dock-btn.active {
-      color: var(--liquid-aqua);
+    .dock-tab.active {
+      color: var(--accent-primary);
     }
 
-    .dock-btn:active {
-      transform: scale(0.9);
+    .dock-tab:active {
+      transform: scale(0.92);
     }
 
-    .dock-count-badge {
+    .dock-badge {
       position: absolute;
       top: 0;
-      right: 6px;
-      background: var(--liquid-gradient);
-      color: #031525;
+      right: 4px;
+      background: var(--accent-primary);
+      color: #fff;
       font-family: var(--font-mono);
       font-size: 9.5px;
-      font-weight: 900;
-      padding: 1px 6px;
-      border-radius: var(--radius-pill);
-      min-width: 17px;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 10px;
+      min-width: 16px;
       text-align: center;
       display: none;
-      box-shadow: 0 2px 8px rgba(0, 242, 254, 0.4);
     }
 
-    /* Glass Bottom Sheet Modal */
-    .glass-modal-overlay {
+    /* Modal / Bottom Sheet */
+    .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      background: rgba(0, 0, 0, 0.82);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       z-index: 200;
       display: none;
       align-items: flex-end;
       justify-content: center;
     }
 
-    .glass-modal-sheet {
-      background: rgba(16, 18, 26, 0.88);
-      backdrop-filter: blur(36px) saturate(200%);
-      -webkit-backdrop-filter: blur(36px) saturate(200%);
-      border: 1px solid var(--glass-border);
-      box-shadow: 0 -24px 64px rgba(0, 0, 0, 0.8), var(--glass-highlight);
+    .modal-sheet {
+      background: var(--bg-card);
+      border: 1px solid var(--border-medium);
       border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.5);
       width: 100%;
       max-width: 480px;
       max-height: 88vh;
       max-height: 88dvh;
       overflow-y: auto;
-      padding: 22px 20px calc(24px + env(safe-area-inset-bottom, 0px)) 20px;
-      animation: sheetSlideUp 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 20px 18px calc(24px + env(safe-area-inset-bottom, 0px)) 18px;
+      animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    @keyframes sheetSlideUp {
+    @keyframes slideUp {
       from { transform: translateY(100%); }
       to { transform: translateY(0); }
     }
@@ -701,21 +663,21 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 18px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--glass-border-subtle);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-subtle);
     }
 
     .modal-title-text {
       font-family: var(--font-display);
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 800;
-      letter-spacing: -0.2px;
+      color: var(--text-title);
     }
 
     .btn-modal-close {
-      background: var(--glass-card);
-      border: 1px solid var(--glass-border);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
       color: var(--text-muted);
       width: 32px;
       height: 32px;
@@ -728,7 +690,7 @@
     }
 
     .form-group {
-      margin-bottom: 13px;
+      margin-bottom: 12px;
     }
 
     .form-row-2 {
@@ -738,39 +700,37 @@
     }
 
     .form-label {
-      font-size: 11.5px;
+      font-size: 11px;
       font-weight: 700;
       color: var(--text-muted);
-      margin-bottom: 6px;
+      margin-bottom: 5px;
       display: block;
     }
 
-    .form-input-glass, .form-select-glass, .form-textarea-glass {
+    .form-input, .form-select, .form-textarea {
       width: 100%;
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid var(--glass-border);
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
-      padding: 13px 15px;
-      color: #fff;
-      font-size: 13.5px;
+      padding: 12px 14px;
+      color: var(--text-title);
+      font-size: 13px;
       font-family: var(--font-body);
       outline: none;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .form-textarea-glass {
-      min-height: 85px;
+    .form-textarea {
+      min-height: 80px;
       resize: vertical;
     }
 
-    .form-input-glass:focus, .form-select-glass:focus, .form-textarea-glass:focus {
-      border-color: var(--liquid-aqua);
-      box-shadow: 0 0 14px rgba(0, 242, 254, 0.25);
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--border-strong);
     }
 
-    .upload-glass-box {
-      border: 2px dashed var(--glass-border);
-      background: rgba(0, 0, 0, 0.25);
+    .upload-box {
+      border: 2px dashed var(--border-medium);
+      background: var(--bg-input);
       border-radius: var(--radius-md);
       padding: 16px;
       text-align: center;
@@ -791,39 +751,37 @@
       display: none;
     }
 
-    .btn-liquid-action {
+    .btn-action-submit {
       width: 100%;
-      background: var(--liquid-gradient);
-      color: #031525;
+      background: var(--accent-primary);
+      color: #fff;
       border: none;
-      padding: 15px;
-      border-radius: var(--radius-pill);
+      padding: 14px;
+      border-radius: var(--radius-md);
       font-family: var(--font-display);
-      font-size: 14.5px;
-      font-weight: 900;
+      font-size: 14px;
+      font-weight: 800;
       cursor: pointer;
-      margin-top: 12px;
+      margin-top: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      box-shadow: 0 6px 20px rgba(0, 242, 254, 0.35);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      transition: transform 0.15s ease, background-color 0.15s ease;
     }
 
-    .btn-liquid-action:active {
+    .btn-action-submit:active {
       transform: scale(0.97);
-      box-shadow: 0 2px 10px rgba(0, 242, 254, 0.2);
     }
 
     /* Cart Items */
-    .cart-glass-item {
+    .cart-row-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--glass-border-subtle);
-      padding: 10px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      padding: 10px 12px;
       border-radius: var(--radius-md);
       margin-bottom: 8px;
     }
@@ -831,14 +789,14 @@
     .cart-item-left {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       flex: 1;
       overflow: hidden;
     }
 
     .cart-item-thumb {
-      width: 42px;
-      height: 42px;
+      width: 40px;
+      height: 40px;
       border-radius: var(--radius-sm);
       object-fit: cover;
       background: #000;
@@ -850,11 +808,12 @@
     }
 
     .cart-item-name {
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 700;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      color: var(--text-title);
     }
 
     .cart-item-sub {
@@ -870,13 +829,13 @@
       gap: 8px;
     }
 
-    .btn-qty-glass {
-      background: var(--glass-card);
-      border: 1px solid var(--glass-border);
-      color: var(--text-pure);
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
+    .btn-qty {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-title);
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -887,19 +846,19 @@
 
     .cart-qty-val {
       font-family: var(--font-mono);
-      font-size: 13.5px;
-      font-weight: 800;
+      font-size: 13px;
+      font-weight: 700;
       min-width: 16px;
       text-align: center;
     }
 
-    .btn-clear-glass {
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: #f87171;
-      padding: 6px 12px;
-      border-radius: var(--radius-pill);
-      font-size: 11.5px;
+    .btn-clear-cart {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      color: #ef4444;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
       font-weight: 700;
       cursor: pointer;
       display: flex;
@@ -908,41 +867,41 @@
     }
 
     /* Promo & Bonus */
-    .promo-glass-wrap {
+    .promo-row {
       display: flex;
       gap: 8px;
       margin-bottom: 12px;
     }
 
-    .promo-glass-inp {
+    .promo-input {
       flex: 1;
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-pill);
-      padding: 11px 16px;
-      color: #fff;
-      font-size: 13.5px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      color: var(--text-title);
+      font-size: 13px;
       text-transform: uppercase;
       outline: none;
     }
 
-    .btn-promo-glass {
-      background: var(--glass-elevated);
-      border: 1px solid var(--glass-border);
-      color: var(--text-pure);
-      padding: 0 18px;
-      border-radius: var(--radius-pill);
-      font-size: 12.5px;
-      font-weight: 800;
+    .btn-promo-apply {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-medium);
+      color: var(--text-title);
+      padding: 0 14px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 700;
       cursor: pointer;
     }
 
-    .bonus-card-glass {
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid var(--glass-border);
+    .bonus-card {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
-      padding: 12px 14px;
-      margin-bottom: 14px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -950,10 +909,10 @@
 
     /* Payment Cards */
     .payment-title-label {
-      font-size: 11.5px;
-      font-weight: 800;
+      font-size: 11px;
+      font-weight: 700;
       color: var(--text-muted);
-      margin: 14px 0 8px 0;
+      margin: 12px 0 8px 0;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -969,9 +928,9 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: rgba(0, 0, 0, 0.35);
-      border: 1.5px solid var(--glass-border-subtle);
-      padding: 12px 14px;
+      background: var(--bg-input);
+      border: 1.5px solid var(--border-subtle);
+      padding: 11px 13px;
       border-radius: var(--radius-md);
       cursor: pointer;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -982,15 +941,14 @@
     }
 
     .payment-opt-card.active {
-      border-color: var(--liquid-aqua);
-      background: rgba(0, 242, 254, 0.08);
-      box-shadow: 0 0 16px rgba(0, 242, 254, 0.15);
+      border-color: var(--accent-primary);
+      background: var(--accent-subtle);
     }
 
     .payment-opt-left {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .payment-opt-icon {
@@ -998,18 +956,18 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
     }
 
     .payment-opt-title {
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 700;
-      color: var(--text-pure);
+      color: var(--text-title);
     }
 
     .payment-opt-desc {
-      font-size: 11px;
+      font-size: 10.5px;
       color: var(--text-muted);
       margin-top: 1px;
     }
@@ -1018,7 +976,7 @@
       width: 18px;
       height: 18px;
       border-radius: 50%;
-      border: 2px solid var(--glass-border);
+      border: 2px solid var(--border-medium);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1026,8 +984,8 @@
     }
 
     .payment-opt-card.active .payment-opt-radio {
-      border-color: var(--liquid-aqua);
-      background: var(--liquid-aqua);
+      border-color: var(--accent-primary);
+      background: var(--accent-primary);
     }
 
     .payment-opt-card.active .payment-opt-radio::after {
@@ -1035,29 +993,29 @@
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: #031525;
+      background: #fff;
     }
 
     /* Admin Tabs */
-    .admin-glass-tabs {
+    .admin-tabs {
       display: flex;
-      gap: 6px;
+      gap: 5px;
       margin-bottom: 16px;
-      background: rgba(0, 0, 0, 0.4);
-      padding: 5px;
-      border-radius: var(--radius-pill);
-      border: 1px solid var(--glass-border);
+      background: var(--bg-input);
+      padding: 4px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
       overflow-x: auto;
       scrollbar-width: none;
     }
 
-    .admin-glass-tabs::-webkit-scrollbar {
+    .admin-tabs::-webkit-scrollbar {
       display: none;
     }
 
     .admin-tab-btn {
-      padding: 8px 12px;
-      border-radius: var(--radius-pill);
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
       border: none;
       background: transparent;
       color: var(--text-muted);
@@ -1065,13 +1023,13 @@
       font-weight: 700;
       cursor: pointer;
       white-space: nowrap;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
     }
 
     .admin-tab-btn.active {
-      background: var(--liquid-gradient);
-      color: #031525;
-      box-shadow: 0 4px 12px rgba(0, 242, 254, 0.3);
+      background: var(--bg-elevated);
+      color: var(--accent-primary);
+      border: 1px solid var(--border-medium);
     }
 
     .admin-tab-pane {
@@ -1082,26 +1040,26 @@
       display: block;
     }
 
-    .admin-box-glass {
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid var(--glass-border);
+    .admin-setting-box {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
-      padding: 14px;
-      margin-bottom: 14px;
+      padding: 12px;
+      margin-bottom: 12px;
     }
 
-    .admin-box-head {
+    .admin-setting-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .toggle-switch {
       position: relative;
       display: inline-block;
-      width: 42px;
-      height: 24px;
+      width: 40px;
+      height: 22px;
     }
 
     .toggle-switch input {
@@ -1114,17 +1072,17 @@
       position: absolute;
       cursor: pointer;
       top: 0; left: 0; right: 0; bottom: 0;
-      background-color: var(--glass-elevated);
-      border: 1px solid var(--glass-border);
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border-medium);
       transition: .2s;
-      border-radius: 24px;
+      border-radius: 22px;
     }
 
     .toggle-slider:before {
       position: absolute;
       content: "";
-      height: 18px;
-      width: 18px;
+      height: 16px;
+      width: 16px;
       left: 2px;
       bottom: 2px;
       background-color: white;
@@ -1133,107 +1091,101 @@
     }
 
     input:checked + .toggle-slider {
-      background: var(--liquid-gradient);
-      border-color: var(--liquid-aqua);
+      background-color: var(--accent-primary);
+      border-color: var(--accent-primary);
     }
 
     input:checked + .toggle-slider:before {
       transform: translateX(18px);
-      background-color: #031525;
+      background-color: #fff;
     }
 
-    /* Purchases List & Keys */
-    .purchased-glass-card {
-      background: var(--glass-card);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid var(--glass-border);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), var(--glass-highlight);
-      border-radius: var(--radius-lg);
-      padding: 16px;
-      margin-bottom: 14px;
+    /* Purchases List */
+    .purchase-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 12px;
     }
 
-    .purchased-card-head {
+    .purchase-head {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 8px;
     }
 
-    .purchased-code {
+    .purchase-code {
       font-family: var(--font-display);
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 800;
     }
 
-    .purchased-status-pill {
-      font-size: 11px;
-      font-weight: 800;
-      padding: 4px 10px;
-      border-radius: var(--radius-pill);
+    .purchase-status-pill {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
     }
 
-    .pill-paid { background: rgba(16, 185, 129, 0.2); color: var(--liquid-emerald); border: 1px solid var(--liquid-emerald); }
-    .pill-pending { background: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid #facc15; }
+    .status-paid { background: rgba(16, 185, 129, 0.15); color: var(--accent-primary); }
+    .status-pending { background: rgba(234, 179, 8, 0.15); color: #eab308; }
 
-    .key-glass-display {
-      background: rgba(0, 0, 0, 0.45);
-      border: 1px solid var(--glass-border);
+    .key-box {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
       border-radius: var(--radius-sm);
-      padding: 12px;
-      margin-top: 10px;
+      padding: 10px;
+      margin-top: 8px;
       font-family: var(--font-mono);
-      font-size: 13px;
-      color: var(--liquid-aqua);
+      font-size: 12.5px;
+      color: var(--accent-primary);
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
-    .btn-copy-glass {
-      background: var(--glass-elevated);
-      border: 1px solid var(--glass-border);
-      color: var(--text-pure);
-      padding: 5px 10px;
-      border-radius: var(--radius-pill);
-      font-size: 11.5px;
+    .btn-copy-key {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-title);
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 11px;
       cursor: pointer;
     }
 
     /* Partner Hero Card */
-    .partner-liquid-hero {
-      background: var(--glass-card);
-      backdrop-filter: blur(28px) saturate(180%);
-      -webkit-backdrop-filter: blur(28px) saturate(180%);
-      border: 1px solid var(--glass-border);
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4), var(--glass-highlight);
-      border-radius: var(--radius-xl);
-      padding: 24px;
+    .partner-hero-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px;
       margin-bottom: 16px;
       text-align: center;
     }
 
-    .partner-grid-2 {
+    .partner-stat-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 16px;
+      gap: 10px;
+      margin-top: 14px;
     }
 
-    .partner-tile {
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid var(--glass-border-subtle);
+    .partner-stat-box {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
-      padding: 14px;
+      padding: 12px;
       text-align: center;
     }
 
-    .partner-tile-num {
+    .partner-stat-val {
       font-family: var(--font-display);
-      font-size: 22px;
-      font-weight: 900;
-      color: var(--liquid-aqua);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent-primary);
     }
   </style>
 </head>
@@ -1243,7 +1195,7 @@
     <!-- Header -->
     <header>
       <div class="brand" onclick="switchDockTab('catalog')" title="NORVEX SHOP">
-        <div class="brand-icon-glass">
+        <div class="brand-icon-box">
           <svg viewBox="0 0 24 24">
             <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
           </svg>
@@ -1255,7 +1207,12 @@
       </div>
 
       <div class="header-actions">
-        <button class="btn-header-glass admin-only" onclick="openSettingsModal()" title="Настройки">
+        <!-- Theme Toggle Button ☀️ / 🌙 -->
+        <button class="btn-header-tool" id="btnThemeToggle" onclick="toggleTheme()" title="Сменить тему">
+          <span id="themeIcon">🌙</span>
+        </button>
+
+        <button class="btn-header-tool admin-only" onclick="openSettingsModal()" title="Настройки">
           <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
         </button>
       </div>
@@ -1265,13 +1222,13 @@
     <div class="view-pane active" id="viewCatalog">
       <!-- Search & Add Action -->
       <div class="search-row">
-        <div class="search-glass-box">
+        <div class="search-box">
           <span class="search-icon">
             <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
           </span>
           <input type="text" id="searchInput" class="search-input" placeholder="Поиск товаров...">
         </div>
-        <button class="btn-glass-add admin-only" onclick="openProductModal()">
+        <button class="btn-add-item admin-only" onclick="openProductModal()">
           <span>+ Товар</span>
         </button>
       </div>
@@ -1282,7 +1239,7 @@
       <!-- Meta Info -->
       <div class="meta-row">
         <span id="gridCountLabel">КАТАЛОГ (0)</span>
-        <span id="activeCategoryName" style="color:var(--liquid-aqua);">Все товары</span>
+        <span id="activeCategoryName" style="color:var(--accent-primary);">Все товары</span>
       </div>
 
       <!-- Items Grid -->
@@ -1300,56 +1257,56 @@
 
     <!-- TAB VIEW 3: REFERRALS -->
     <div class="view-pane" id="viewReferrals">
-      <div class="partner-liquid-hero">
-        <div style="font-size:36px; margin-bottom:8px;">💎</div>
-        <div style="font-family:var(--font-display); font-size:20px; font-weight:900;">ПАРТНЕРСКАЯ ПРОГРАММА</div>
-        <div style="font-size:12.5px; color:var(--text-muted); margin-top:6px; line-height:1.4;">Приглашайте друзей и получайте <b id="refPercentText" style="color:var(--liquid-aqua);">5%</b> с каждой их покупки бонусами на счет</div>
+      <div class="partner-hero-card">
+        <div style="font-size:32px; margin-bottom:6px;">👥</div>
+        <div style="font-family:var(--font-display); font-size:18px; font-weight:800;">ПАРТНЕРСКАЯ ПРОГРАММА</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Приглашайте друзей и получайте <b id="refPercentText" style="color:var(--accent-primary);">5%</b> с их покупок на баланс</div>
         
-        <div class="partner-grid-2">
-          <div class="partner-tile">
-            <div class="partner-tile-num" id="refBalanceVal">0 ₽</div>
+        <div class="partner-stat-grid">
+          <div class="partner-stat-box">
+            <div class="partner-stat-val" id="refBalanceVal">0 ₽</div>
             <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Бонусный баланс</div>
           </div>
-          <div class="partner-tile">
-            <div class="partner-tile-num" id="refInvitedVal">0</div>
+          <div class="partner-stat-box">
+            <div class="partner-stat-val" id="refInvitedVal">0</div>
             <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Приглашено друзей</div>
           </div>
         </div>
 
-        <button class="btn-liquid-action" onclick="copyReferralLink()">
+        <button class="btn-action-submit" onclick="copyReferralLink()">
           📋 СКОПИРОВАТЬ РЕФ-ССЫЛКУ
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Floating Liquid Glass Dock -->
-  <div class="liquid-dock">
-    <button class="dock-btn active" id="dockBtnCatalog" onclick="switchDockTab('catalog')">
+  <!-- Bottom Navigation Dock -->
+  <div class="nav-dock">
+    <button class="dock-tab active" id="dockBtnCatalog" onclick="switchDockTab('catalog')">
       <svg viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
-      <span class="dock-label">Витрина</span>
+      <span class="dock-tab-label">Витрина</span>
     </button>
 
-    <button class="dock-btn" id="dockBtnPurchases" onclick="switchDockTab('purchases')">
+    <button class="dock-tab" id="dockBtnPurchases" onclick="switchDockTab('purchases')">
       <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-      <span class="dock-label">Покупки</span>
+      <span class="dock-tab-label">Покупки</span>
     </button>
 
-    <button class="dock-btn" id="dockBtnReferrals" onclick="switchDockTab('referrals')">
+    <button class="dock-tab" id="dockBtnReferrals" onclick="switchDockTab('referrals')">
       <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-      <span class="dock-label">Партнерка</span>
+      <span class="dock-tab-label">Партнерка</span>
     </button>
 
-    <button class="dock-btn" id="dockBtnCart" onclick="openCartModal()">
+    <button class="dock-tab" id="dockBtnCart" onclick="openCartModal()">
       <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-      <span class="dock-label">Корзина</span>
-      <span class="dock-count-badge" id="cartDockBadge">0</span>
+      <span class="dock-tab-label">Корзина</span>
+      <span class="dock-badge" id="cartDockBadge">0</span>
     </button>
   </div>
 
   <!-- MODAL: ADD / EDIT PRODUCT -->
-  <div class="glass-modal-overlay" id="modalProductForm" onclick="handleBackdropClick(event, 'modalProductForm')">
-    <div class="glass-modal-sheet" onclick="event.stopPropagation()">
+  <div class="modal-overlay" id="modalProductForm" onclick="handleBackdropClick(event, 'modalProductForm')">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
       <div class="modal-head">
         <div class="modal-title-text" id="productModalTitle">ТОВАР (АДМИН)</div>
         <button class="btn-modal-close" onclick="closeModal('modalProductForm')">✕</button>
@@ -1359,29 +1316,29 @@
         <label class="form-label">Фото товара *</label>
         <input type="file" id="inpFilePhoto" style="display:none;" accept="image/*" onchange="handleServerFileUpload(event)">
         
-        <div class="upload-glass-box" onclick="document.getElementById('inpFilePhoto').click()">
+        <div class="upload-box" onclick="document.getElementById('inpFilePhoto').click()">
           <img id="uploadImgPreview" class="upload-preview-img" alt="Предпросмотр">
           <div id="uploadPrompt">
-            <div style="font-size:26px; margin-bottom:2px;">🖼️</div>
-            <div style="font-size:13px; font-weight:700;">Выбрать фото с устройства</div>
-            <div style="font-size:10.5px; color:var(--text-muted);">JPG, PNG, WebP</div>
+            <div style="font-size:24px; margin-bottom:2px;">🖼️</div>
+            <div style="font-size:12px; font-weight:700;">Выбрать фото для сервера</div>
+            <div style="font-size:10px; color:var(--text-muted);">JPG, PNG, WebP</div>
           </div>
         </div>
       </div>
 
       <div class="form-group">
         <label class="form-label">Название товара *</label>
-        <input type="text" id="inpProdName" class="form-input-glass" placeholder="Название игры, ключа или предмета">
+        <input type="text" id="inpProdName" class="form-input" placeholder="Название предмета, ключа или услуги">
       </div>
 
       <div class="form-group">
         <label class="form-label">Категория *</label>
-        <select id="inpProdCat" class="form-select-glass"></select>
+        <select id="inpProdCat" class="form-select"></select>
       </div>
 
       <div class="form-group">
         <label class="form-label">Бейдж товара</label>
-        <select id="inpProdBadge" class="form-select-glass">
+        <select id="inpProdBadge" class="form-select">
           <option value="">Авто / Без бейджа</option>
           <option value="hit">🔥 ХИТ</option>
           <option value="sale">⚡ СКИДКА</option>
@@ -1393,26 +1350,26 @@
       <div class="form-row-2">
         <div class="form-group">
           <label class="form-label">Цена (₽) *</label>
-          <input type="number" id="inpProdPrice" class="form-input-glass" placeholder="890">
+          <input type="number" id="inpProdPrice" class="form-input" placeholder="890">
         </div>
         <div class="form-group">
           <label class="form-label">Старая цена (₽)</label>
-          <input type="number" id="inpProdOldPrice" class="form-input-glass" placeholder="1200">
+          <input type="number" id="inpProdOldPrice" class="form-input" placeholder="1200">
         </div>
       </div>
 
       <div class="form-group">
         <label class="form-label">Описание / Свойства</label>
-        <input type="text" id="inpProdDesc" class="form-input-glass" placeholder="Напр. В наличии • Моментальная автовыдача">
+        <input type="text" id="inpProdDesc" class="form-input" placeholder="Напр. В наличии • Моментальная автовыдача">
       </div>
 
-      <button class="btn-liquid-action" id="btnSaveProductSubmit" onclick="saveProductForm()">СОХРАНИТЬ ТОВАР</button>
+      <button class="btn-action-submit" id="btnSaveProductSubmit" onclick="saveProductForm()">СОХРАНИТЬ ТОВАР</button>
     </div>
   </div>
 
   <!-- MODAL: ADD CATEGORY -->
-  <div class="glass-modal-overlay" id="modalAddCat" onclick="handleBackdropClick(event, 'modalAddCat')">
-    <div class="glass-modal-sheet" onclick="event.stopPropagation()">
+  <div class="modal-overlay" id="modalAddCat" onclick="handleBackdropClick(event, 'modalAddCat')">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
       <div class="modal-head">
         <div class="modal-title-text">НОВАЯ КАТЕГОРИЯ</div>
         <button class="btn-modal-close" onclick="closeModal('modalAddCat')">✕</button>
@@ -1420,12 +1377,12 @@
 
       <div class="form-group">
         <label class="form-label">Название категории *</label>
-        <input type="text" id="inpCatName" class="form-input-glass" placeholder="Напр. CS2, Steam, Ключи, Донат">
+        <input type="text" id="inpCatName" class="form-input" placeholder="Напр. CS2, Steam, Ключи, Донат">
       </div>
 
       <div class="form-group">
         <label class="form-label">Тип иконки</label>
-        <select id="inpCatIconType" class="form-select-glass">
+        <select id="inpCatIconType" class="form-select">
           <option value="games">🎮 Игры</option>
           <option value="key">🔑 Ключи</option>
           <option value="gem">💎 Донат</option>
@@ -1435,17 +1392,17 @@
         </select>
       </div>
 
-      <button class="btn-liquid-action" onclick="saveNewCategory()">СОЗДАТЬ КАТЕГОРИЮ</button>
+      <button class="btn-action-submit" onclick="saveNewCategory()">СОЗДАТЬ КАТЕГОРИЮ</button>
     </div>
   </div>
 
   <!-- MODAL: CART & CHECKOUT -->
-  <div class="glass-modal-overlay" id="modalCart" onclick="handleBackdropClick(event, 'modalCart')">
-    <div class="glass-modal-sheet" onclick="event.stopPropagation()">
+  <div class="modal-overlay" id="modalCart" onclick="handleBackdropClick(event, 'modalCart')">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
       <div class="modal-head">
         <div class="modal-title-text">🛒 ВАША КОРЗИНА</div>
         <div style="display:flex; align-items:center; gap:8px;">
-          <button class="btn-clear-glass" onclick="clearCart()" title="Очистить корзину">
+          <button class="btn-clear-cart" onclick="clearCart()" title="Очистить корзину">
             <svg viewBox="0 0 24 24" style="width:12px; height:12px; fill:currentColor;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
             Очистить
           </button>
@@ -1456,17 +1413,17 @@
       <div id="cartItemsList" style="margin-bottom:14px;"></div>
 
       <!-- Promo Code Box -->
-      <div class="promo-glass-wrap">
-        <input type="text" id="inpCartPromo" class="promo-glass-inp" placeholder="ПРОМОКОД">
-        <button class="btn-promo-glass" onclick="applyPromoCode()">Применить</button>
+      <div class="promo-row">
+        <input type="text" id="inpCartPromo" class="promo-input" placeholder="ПРОМОКОД">
+        <button class="btn-promo-apply" onclick="applyPromoCode()">Применить</button>
       </div>
       <div id="promoResultMsg" style="font-size:12px; margin-top:-6px; margin-bottom:12px; display:none;"></div>
 
       <!-- Bonus Balance Box -->
-      <div class="bonus-card-glass" id="bonusBalanceCard" style="display:none;">
+      <div class="bonus-card" id="bonusBalanceCard" style="display:none;">
         <div>
           <div style="font-size:12.5px; font-weight:700;">Списать бонусы</div>
-          <div style="font-size:11px; color:var(--text-muted);">Доступно: <span id="cartAvailableBonus" style="color:var(--liquid-aqua); font-weight:700;">0 ₽</span></div>
+          <div style="font-size:11px; color:var(--text-muted);">Доступно: <span id="cartAvailableBonus" style="color:var(--accent-primary); font-weight:700;">0 ₽</span></div>
         </div>
         <label class="toggle-switch">
           <input type="checkbox" id="chkUseBonus" onchange="toggleBonusUse()">
@@ -1479,70 +1436,70 @@
       <div class="payment-options-col" id="paymentMethodsList"></div>
 
       <!-- Price Breakdown Card -->
-      <div style="background:rgba(0,0,0,0.4); border:1px solid var(--glass-border); padding:16px; border-radius:var(--radius-md); margin-bottom:14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; font-size:13.5px; color:var(--text-muted); margin-bottom:6px;">
+      <div style="background:var(--bg-input); border:1px solid var(--border-subtle); padding:14px; border-radius:var(--radius-md); margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--text-muted); margin-bottom:4px;">
           <span>Сумма товаров:</span>
-          <span id="modalCartSubtotalSum" style="font-family:var(--font-mono); color:#fff;">0 ₽</span>
+          <span id="modalCartSubtotalSum" style="font-family:var(--font-mono); color:var(--text-title);">0 ₽</span>
         </div>
-        <div id="modalCartDiscountRow" style="display:none; justify-content:space-between; align-items:center; font-size:13.5px; color:var(--liquid-aqua); margin-bottom:6px;">
+        <div id="modalCartDiscountRow" style="display:none; justify-content:space-between; align-items:center; font-size:13px; color:var(--accent-primary); margin-bottom:4px;">
           <span>Скидка:</span>
           <span id="modalCartDiscountSum" style="font-family:var(--font-mono);">-0 ₽</span>
         </div>
-        <div id="modalCartBonusRow" style="display:none; justify-content:space-between; align-items:center; font-size:13.5px; color:var(--liquid-aqua); margin-bottom:6px;">
+        <div id="modalCartBonusRow" style="display:none; justify-content:space-between; align-items:center; font-size:13px; color:var(--accent-primary); margin-bottom:4px;">
           <span>Бонусы:</span>
           <span id="modalCartBonusSum" style="font-family:var(--font-mono);">-0 ₽</span>
         </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; font-size:17px; font-weight:900; padding-top:8px; border-top:1px solid var(--glass-border-subtle);">
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:16px; font-weight:800; padding-top:6px; border-top:1px solid var(--border-subtle);">
           <span>Итого:</span>
-          <span id="modalCartTotalSum" style="font-family:var(--font-display); color:var(--liquid-aqua);">0 ₽</span>
+          <span id="modalCartTotalSum" style="font-family:var(--font-display); color:var(--accent-primary);">0 ₽</span>
         </div>
       </div>
 
-      <button class="btn-liquid-action" id="btnCartSubmit" onclick="proceedToBotOrder()">
+      <button class="btn-action-submit" id="btnCartSubmit" onclick="proceedToBotOrder()">
         ОФОРМИТЬ ЗАКАЗ
       </button>
     </div>
   </div>
 
   <!-- MODAL: SBP DIRECT TRANSFER -->
-  <div class="glass-modal-overlay" id="modalSbpInfo" onclick="handleBackdropClick(event, 'modalSbpInfo')">
-    <div class="glass-modal-sheet" onclick="event.stopPropagation()">
+  <div class="modal-overlay" id="modalSbpInfo" onclick="handleBackdropClick(event, 'modalSbpInfo')">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
       <div class="modal-head">
         <div class="modal-title-text">📱 ОПЛАТА ПО СБП</div>
         <button class="btn-modal-close" onclick="closeModal('modalSbpInfo')">✕</button>
       </div>
 
-      <div style="background:rgba(0,0,0,0.4); border:1px solid var(--glass-border); padding:18px; border-radius:var(--radius-md); margin-bottom:14px; text-align:center;">
+      <div style="background:var(--bg-input); border:1px solid var(--border-subtle); padding:16px; border-radius:var(--radius-md); margin-bottom:14px; text-align:center;">
         <div style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">Сумма к переводу</div>
-        <div id="sbpModalSum" style="font-family:var(--font-display); font-size:26px; font-weight:900; color:var(--liquid-aqua); margin-bottom:14px;">0 ₽</div>
+        <div id="sbpModalSum" style="font-family:var(--font-display); font-size:24px; font-weight:900; color:var(--accent-primary); margin-bottom:12px;">0 ₽</div>
         
-        <div style="text-align:left; font-size:13.5px; line-height:1.6; background:var(--glass-card); padding:14px; border-radius:var(--radius-sm); border:1px solid var(--glass-border);">
-          <div style="margin-bottom:6px;"><b>Номер телефона:</b> <span id="sbpModalPhone" style="user-select:all; color:var(--liquid-aqua); font-weight:800;">-</span></div>
+        <div style="text-align:left; font-size:13px; line-height:1.6; background:var(--bg-card); padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border-subtle);">
+          <div style="margin-bottom:6px;"><b>Номер телефона:</b> <span id="sbpModalPhone" style="user-select:all; color:var(--accent-primary); font-weight:800;">-</span></div>
           <div style="margin-bottom:6px;"><b>Банк:</b> <span id="sbpModalBank">-</span></div>
           <div><b>Получатель:</b> <span id="sbpModalRecipient">-</span></div>
         </div>
       </div>
 
-      <div style="font-size:12px; color:var(--text-muted); margin-bottom:14px; text-align:center; line-height:1.4;">
+      <div style="font-size:11.5px; color:var(--text-muted); margin-bottom:14px; text-align:center; line-height:1.4;">
         Переведите сумму через СБП в приложении банка и нажмите подтверждение
       </div>
 
-      <button class="btn-liquid-action" onclick="confirmSbpPaid()">
+      <button class="btn-action-submit" onclick="confirmSbpPaid()">
         ✅ Я ОПЛАТИЛ
       </button>
     </div>
   </div>
 
   <!-- MODAL: ADMIN SETTINGS -->
-  <div class="glass-modal-overlay" id="modalSettings" onclick="handleBackdropClick(event, 'modalSettings')">
-    <div class="glass-modal-sheet" onclick="event.stopPropagation()">
+  <div class="modal-overlay" id="modalSettings" onclick="handleBackdropClick(event, 'modalSettings')">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
       <div class="modal-head">
         <div class="modal-title-text">УПРАВЛЕНИЕ (АДМИН)</div>
         <button class="btn-modal-close" onclick="closeModal('modalSettings')">✕</button>
       </div>
 
       <!-- Settings Tabs -->
-      <div class="admin-glass-tabs">
+      <div class="admin-tabs">
         <button class="admin-tab-btn active" id="tabBtnGeneral" onclick="openSettingsTab('general')">⚙️ Основные</button>
         <button class="admin-tab-btn" id="tabBtnPayments" onclick="openSettingsTab('payments')">💳 Платежки</button>
         <button class="admin-tab-btn" id="tabBtnStock" onclick="openSettingsTab('stock')">⚡ Ключи</button>
@@ -1554,29 +1511,29 @@
       <div class="admin-tab-pane active" id="tabPaneGeneral">
         <div class="form-group">
           <label class="form-label">Telegram @username бота для заказов *</label>
-          <input type="text" id="inpTgBotUsername" class="form-input-glass" placeholder="Напр. NorvexShopBot">
+          <input type="text" id="inpTgBotUsername" class="form-input" placeholder="Напр. NorvexShopBot">
         </div>
 
         <div class="form-group">
           <label class="form-label">Название магазина</label>
-          <input type="text" id="inpStoreTitle" class="form-input-glass" placeholder="NORVEX SHOP">
+          <input type="text" id="inpStoreTitle" class="form-input" placeholder="NORVEX SHOP">
         </div>
 
         <div class="form-group">
           <label class="form-label">% бонусов реферальной программы (по умолч. 5%)</label>
-          <input type="number" id="inpRefPercent" class="form-input-glass" placeholder="5">
+          <input type="number" id="inpRefPercent" class="form-input" placeholder="5">
         </div>
 
-        <button class="btn-liquid-action" onclick="saveGeneralSettings()">СОХРАНИТЬ НАСТРОЙКИ</button>
+        <button class="btn-action-submit" onclick="saveGeneralSettings()">СОХРАНИТЬ НАСТРОЙКИ</button>
       </div>
 
       <!-- TAB 2: Payment Gateways -->
       <div class="admin-tab-pane" id="tabPanePayments">
         
         <!-- CryptoBot -->
-        <div class="admin-box-glass">
-          <div class="admin-box-head">
-            <div style="font-size:13.5px; font-weight:800;">💎 CryptoBot (@CryptoBot)</div>
+        <div class="admin-setting-box">
+          <div class="admin-setting-head">
+            <div style="font-size:13px; font-weight:700;">💎 CryptoBot (@CryptoBot)</div>
             <label class="toggle-switch">
               <input type="checkbox" id="chkCryptoBot">
               <span class="toggle-slider"></span>
@@ -1584,14 +1541,14 @@
           </div>
           <div class="form-group" style="margin-bottom:0;">
             <label class="form-label">API Token (@CryptoBot -> Crypto Pay -> Create App)</label>
-            <input type="password" id="inpCryptoBotToken" class="form-input-glass" placeholder="12345:AA...">
+            <input type="password" id="inpCryptoBotToken" class="form-input" placeholder="12345:AA...">
           </div>
         </div>
 
         <!-- Telegram Stars -->
-        <div class="admin-box-glass">
-          <div class="admin-box-head">
-            <div style="font-size:13.5px; font-weight:800;">⭐ Telegram Stars (Звёзды)</div>
+        <div class="admin-setting-box">
+          <div class="admin-setting-head">
+            <div style="font-size:13px; font-weight:700;">⭐ Telegram Stars (Звёзды)</div>
             <label class="toggle-switch">
               <input type="checkbox" id="chkStars">
               <span class="toggle-slider"></span>
@@ -1599,14 +1556,14 @@
           </div>
           <div class="form-group" style="margin-bottom:0;">
             <label class="form-label">Курс: 1 ⭐ = сколько рублей (по умолч. 2.0)</label>
-            <input type="number" step="0.1" id="inpStarsRate" class="form-input-glass" placeholder="2.0">
+            <input type="number" step="0.1" id="inpStarsRate" class="form-input" placeholder="2.0">
           </div>
         </div>
 
         <!-- Aaio -->
-        <div class="admin-box-glass">
-          <div class="admin-box-head">
-            <div style="font-size:13.5px; font-weight:800;">💳 Aaio (СБП, Карты РФ физлицам)</div>
+        <div class="admin-setting-box">
+          <div class="admin-setting-head">
+            <div style="font-size:13px; font-weight:700;">💳 Aaio (СБП, Карты РФ без ИП)</div>
             <label class="toggle-switch">
               <input type="checkbox" id="chkAaio">
               <span class="toggle-slider"></span>
@@ -1614,24 +1571,24 @@
           </div>
           <div class="form-group">
             <label class="form-label">Merchant ID</label>
-            <input type="text" id="inpAaioMerchantId" class="form-input-glass" placeholder="ID мерчанта в aaio.so">
+            <input type="text" id="inpAaioMerchantId" class="form-input" placeholder="ID мерчанта в aaio.so">
           </div>
           <div class="form-row-2">
             <div class="form-group" style="margin-bottom:0;">
               <label class="form-label">Секретный ключ №1</label>
-              <input type="password" id="inpAaioSecret1" class="form-input-glass" placeholder="Secret 1">
+              <input type="password" id="inpAaioSecret1" class="form-input" placeholder="Secret 1">
             </div>
             <div class="form-group" style="margin-bottom:0;">
               <label class="form-label">Секретный ключ №2</label>
-              <input type="password" id="inpAaioSecret2" class="form-input-glass" placeholder="Secret 2">
+              <input type="password" id="inpAaioSecret2" class="form-input" placeholder="Secret 2">
             </div>
           </div>
         </div>
 
         <!-- СБП -->
-        <div class="admin-box-glass">
-          <div class="admin-box-head">
-            <div style="font-size:13.5px; font-weight:800;">📱 Прямой перевод СБП</div>
+        <div class="admin-setting-box">
+          <div class="admin-setting-head">
+            <div style="font-size:13px; font-weight:700;">📱 Прямой перевод СБП</div>
             <label class="toggle-switch">
               <input type="checkbox" id="chkSbp">
               <span class="toggle-slider"></span>
@@ -1639,40 +1596,40 @@
           </div>
           <div class="form-group">
             <label class="form-label">Номер телефона для СБП</label>
-            <input type="text" id="inpSbpPhone" class="form-input-glass" placeholder="+7 999 123-45-67">
+            <input type="text" id="inpSbpPhone" class="form-input" placeholder="+7 999 123-45-67">
           </div>
           <div class="form-row-2">
             <div class="form-group" style="margin-bottom:0;">
               <label class="form-label">Банк</label>
-              <input type="text" id="inpSbpBank" class="form-input-glass" placeholder="Т-Банк / Сбер">
+              <input type="text" id="inpSbpBank" class="form-input" placeholder="Т-Банк / Сбер">
             </div>
             <div class="form-group" style="margin-bottom:0;">
               <label class="form-label">Получатель</label>
-              <input type="text" id="inpSbpRecipient" class="form-input-glass" placeholder="Иван И.">
+              <input type="text" id="inpSbpRecipient" class="form-input" placeholder="Иван И.">
             </div>
           </div>
         </div>
 
-        <button class="btn-liquid-action" onclick="savePaymentSettings()">СОХРАНИТЬ ПЛАТЕЖКИ</button>
+        <button class="btn-action-submit" onclick="savePaymentSettings()">СОХРАНИТЬ ПЛАТЕЖКИ</button>
       </div>
 
       <!-- TAB 3: Stock / Keys -->
       <div class="admin-tab-pane" id="tabPaneStock">
         <div class="form-group">
           <label class="form-label">Выберите товар</label>
-          <select id="inpStockProdSelect" class="form-select-glass" onchange="loadProductStockAdmin()"></select>
+          <select id="inpStockProdSelect" class="form-select" onchange="loadProductStockAdmin()"></select>
         </div>
 
-        <div id="stockStatusBox" style="background:rgba(0,0,0,0.35); border:1px solid var(--glass-border); padding:12px; border-radius:var(--radius-sm); margin-bottom:14px; font-size:13px;">
-          Остаток ключей на складе: <b id="stockRemainingCount" style="color:var(--liquid-aqua);">0 шт</b>
+        <div id="stockStatusBox" style="background:var(--bg-input); border:1px solid var(--border-subtle); padding:10px; border-radius:var(--radius-sm); margin-bottom:12px; font-size:12px;">
+          Остаток ключей на складе: <b id="stockRemainingCount" style="color:var(--accent-primary);">0 шт</b>
         </div>
 
         <div class="form-group">
           <label class="form-label">Вставьте ключи (по 1 строке на ключ)</label>
-          <textarea id="inpStockKeysText" class="form-textarea-glass" placeholder="XXXXX-YYYYY-ZZZZZ&#10;AAAAA-BBBBB-CCCCC"></textarea>
+          <textarea id="inpStockKeysText" class="form-textarea" placeholder="XXXXX-YYYYY-ZZZZZ&#10;AAAAA-BBBBB-CCCCC"></textarea>
         </div>
 
-        <button class="btn-liquid-action" onclick="addStockKeys()">ПОПОЛНИТЬ СКЛАД</button>
+        <button class="btn-action-submit" onclick="addStockKeys()">ПОПОЛНИТЬ СКЛАД</button>
       </div>
 
       <!-- TAB 4: Promos -->
@@ -1680,11 +1637,11 @@
         <div class="form-row-2">
           <div class="form-group">
             <label class="form-label">Код промокода</label>
-            <input type="text" id="inpNewPromoCode" class="form-input-glass" placeholder="SUMMER20">
+            <input type="text" id="inpNewPromoCode" class="form-input" placeholder="SUMMER20">
           </div>
           <div class="form-group">
             <label class="form-label">Тип скидки</label>
-            <select id="inpNewPromoType" class="form-select-glass">
+            <select id="inpNewPromoType" class="form-select">
               <option value="percent">Процент (%)</option>
               <option value="fixed">Фикс (₽)</option>
             </select>
@@ -1694,17 +1651,17 @@
         <div class="form-row-2">
           <div class="form-group">
             <label class="form-label">Размер скидки</label>
-            <input type="number" id="inpNewPromoVal" class="form-input-glass" placeholder="15">
+            <input type="number" id="inpNewPromoVal" class="form-input" placeholder="15">
           </div>
           <div class="form-group">
             <label class="form-label">Мин. сумма (₽)</label>
-            <input type="number" id="inpNewPromoMin" class="form-input-glass" placeholder="0">
+            <input type="number" id="inpNewPromoMin" class="form-input" placeholder="0">
           </div>
         </div>
 
-        <button class="btn-liquid-action" onclick="createPromo()">СОЗДАТЬ ПРОМОКОД</button>
+        <button class="btn-action-submit" onclick="createPromo()">СОЗДАТЬ ПРОМОКОД</button>
 
-        <div class="payment-title-label" style="margin-top:18px;">Активные промокоды</div>
+        <div class="payment-title-label" style="margin-top:16px;">Активные промокоды</div>
         <div id="adminPromosList"></div>
       </div>
 
@@ -1712,27 +1669,64 @@
       <div class="admin-tab-pane" id="tabPaneBroadcast">
         <div class="form-group">
           <label class="form-label">Текст рассылки всем пользователям бота (HTML)</label>
-          <textarea id="inpBroadcastText" class="form-textarea-glass" placeholder="🔥 Новое поступление ключей и скидка 20%!"></textarea>
+          <textarea id="inpBroadcastText" class="form-textarea" placeholder="🔥 Новое поступление ключей и скидка 20%!"></textarea>
         </div>
 
         <div class="form-row-2">
           <div class="form-group">
             <label class="form-label">Текст кнопки (опционально)</label>
-            <input type="text" id="inpBroadcastBtnText" class="form-input-glass" placeholder="🎮 Открыть витрину">
+            <input type="text" id="inpBroadcastBtnText" class="form-input" placeholder="🎮 Открыть витрину">
           </div>
           <div class="form-group">
             <label class="form-label">Ссылка кнопки</label>
-            <input type="text" id="inpBroadcastBtnUrl" class="form-input-glass" placeholder="https://t.me/...">
+            <input type="text" id="inpBroadcastBtnUrl" class="form-input" placeholder="https://t.me/...">
           </div>
         </div>
 
-        <button class="btn-liquid-action" onclick="sendBroadcast()">📢 ОТПРАВИТЬ РАССЫЛКУ</button>
+        <button class="btn-action-submit" onclick="sendBroadcast()">📢 ОТПРАВИТЬ РАССЫЛКУ</button>
       </div>
 
     </div>
   </div>
 
   <script>
+    // ==========================================
+    // THEME MANAGEMENT (LIGHT / DARK)
+    // ==========================================
+    let currentTheme = localStorage.getItem('norvex_theme') || 'dark';
+
+    function applyTheme(theme) {
+      currentTheme = theme;
+      localStorage.setItem('norvex_theme', theme);
+      const iconEl = document.getElementById('themeIcon');
+
+      if (theme === 'light') {
+        document.body.classList.add('light-theme');
+        if (iconEl) iconEl.innerText = '☀️';
+        try {
+          if (window.Telegram?.WebApp?.setHeaderColor) {
+            window.Telegram.WebApp.setHeaderColor('#f4f5f9');
+          }
+        } catch(e) {}
+      } else {
+        document.body.classList.remove('light-theme');
+        if (iconEl) iconEl.innerText = '🌙';
+        try {
+          if (window.Telegram?.WebApp?.setHeaderColor) {
+            window.Telegram.WebApp.setHeaderColor('#0f1117');
+          }
+        } catch(e) {}
+      }
+    }
+
+    window.toggleTheme = function() {
+      triggerHaptic('selection');
+      applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    };
+
+    // Initialize Theme
+    applyTheme(currentTheme);
+
     // ==========================================
     // UTILS & XSS PROTECTION
     // ==========================================
@@ -1824,7 +1818,7 @@
     // ==========================================
     window.switchDockTab = function(tabName) {
       triggerHaptic('selection');
-      document.querySelectorAll('.dock-btn').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.dock-tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.view-pane').forEach(v => v.classList.remove('active'));
 
       if (tabName === 'catalog') {
@@ -1920,7 +1914,7 @@
     async function loadMyPurchases() {
       const container = document.getElementById('purchasesList');
       if (!container) return;
-      container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);">⏳ Загрузка ваших заказов...</div>';
+      container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);">⏳ Загрузка заказов...</div>';
 
       try {
         const res = await apiFetch('/api/my-orders');
@@ -1930,9 +1924,9 @@
         if (orders.length === 0) {
           container.innerHTML = `
             <div style="text-align:center; padding:50px 20px; color:var(--text-muted);">
-              <div style="font-size:38px; margin-bottom:8px;">📦</div>
-              <div style="font-size:14.5px; font-weight:700; color:var(--text-pure);">Покупок пока нет</div>
-              <div style="font-size:12px; margin-top:4px;">Все купленные ключи и заказы отобразятся здесь</div>
+              <div style="font-size:36px; margin-bottom:8px;">📦</div>
+              <div style="font-size:14px; font-weight:700; color:var(--text-title);">Покупок пока нет</div>
+              <div style="font-size:12px; margin-top:4px;">Все купленные ключи появятся здесь</div>
             </div>
           `;
           return;
@@ -1941,7 +1935,7 @@
         let html = '';
         orders.forEach(o => {
           const isPaid = o.status === 'paid';
-          const pillClass = isPaid ? 'pill-paid' : 'pill-pending';
+          const pillClass = isPaid ? 'status-paid' : 'status-pending';
           const statusText = isPaid ? '✅ Оплачен' : '⏳ В обработке';
 
           let keysHtml = '';
@@ -1949,9 +1943,9 @@
             o.deliveredKeys.forEach(dk => {
               dk.keys.forEach(k => {
                 keysHtml += `
-                  <div class="key-glass-display">
+                  <div class="key-box">
                     <span>${escapeHtml(k)}</span>
-                    <button class="btn-copy-glass" onclick="copyKeyText('${escapeHtml(k)}')">Копировать</button>
+                    <button class="btn-copy-key" onclick="copyKeyText('${escapeHtml(k)}')">Копировать</button>
                   </div>
                 `;
               });
@@ -1961,14 +1955,14 @@
           let itemsDesc = (o.items || []).map(i => `${i.name} (${i.qty} шт)`).join(', ');
 
           html += `
-            <div class="purchased-glass-card">
-              <div class="purchased-card-head">
-                <div class="purchased-code">#${escapeHtml(o.orderCode)}</div>
-                <div class="purchased-status-pill ${pillClass}">${statusText}</div>
+            <div class="purchase-card">
+              <div class="purchase-head">
+                <div class="purchase-code">#${escapeHtml(o.orderCode)}</div>
+                <div class="purchase-status-pill ${pillClass}">${statusText}</div>
               </div>
-              <div style="font-size:13px; font-weight:700; color:var(--text-pure); margin-bottom:6px;">${escapeHtml(itemsDesc)}</div>
+              <div style="font-size:13px; font-weight:700; color:var(--text-title); margin-bottom:4px;">${escapeHtml(itemsDesc)}</div>
               <div style="font-size:11.5px; color:var(--text-muted); display:flex; justify-content:space-between;">
-                <span>Сумма: <b style="color:var(--liquid-aqua);">${o.totalRub.toLocaleString()} ₽</b></span>
+                <span>Сумма: <b>${o.totalRub.toLocaleString()} ₽</b></span>
                 <span>${escapeHtml(o.createdAt || '')}</span>
               </div>
               ${keysHtml}
@@ -1978,14 +1972,14 @@
 
         container.innerHTML = html;
       } catch (e) {
-        container.innerHTML = `<div style="text-align:center; padding:30px; color:#ff6b6b;">Ошибка загрузки покупок: ${e.message}</div>`;
+        container.innerHTML = `<div style="text-align:center; padding:30px; color:#ef4444;">Ошибка загрузки покупок: ${e.message}</div>`;
       }
     }
 
     window.copyKeyText = function(text) {
       triggerHaptic('medium');
       navigator.clipboard.writeText(text).then(() => {
-        alert("Ключ скопирован!");
+        alert("Ключ скопирован в буфер обмена!");
       });
     };
 
@@ -2051,7 +2045,7 @@
 
       try {
         const promptEl = document.getElementById('uploadPrompt');
-        if (promptEl) promptEl.innerHTML = '<div style="font-size:12.5px; font-weight:700;">⏳ Загрузка...</div>';
+        if (promptEl) promptEl.innerHTML = '<div style="font-size:12px; font-weight:700;">⏳ Загрузка...</div>';
 
         const res = await apiFetch('/api/upload', {
           method: 'POST',
@@ -2084,9 +2078,9 @@
         imgEl.style.display = 'none';
         if (promptEl) {
           promptEl.innerHTML = `
-            <div style="font-size:26px; margin-bottom:2px;">🖼️</div>
-            <div style="font-size:13px; font-weight:700;">Выбрать фото с устройства</div>
-            <div style="font-size:10.5px; color:var(--text-muted);">JPG, PNG, WebP</div>
+            <div style="font-size:24px; margin-bottom:2px;">🖼️</div>
+            <div style="font-size:12px; font-weight:700;">Выбрать фото для сервера</div>
+            <div style="font-size:10px; color:var(--text-muted);">JPG, PNG, WebP</div>
           `;
           promptEl.style.display = 'block';
         }
@@ -2097,13 +2091,13 @@
     // RENDERING & BADGES
     // ==========================================
     function getBadgeHtml(badge, price, oldPrice) {
-      if (badge === 'hit') return '<span class="glass-badge badge-hit">🔥 ХИТ</span>';
-      if (badge === 'sale') return '<span class="glass-badge badge-sale">⚡ СКИДКА</span>';
-      if (badge === 'new') return '<span class="glass-badge badge-new">✨ NEW</span>';
-      if (badge === 'top') return '<span class="glass-badge badge-top">💎 ТОП</span>';
+      if (badge === 'hit') return '<span class="card-badge badge-hit">🔥 ХИТ</span>';
+      if (badge === 'sale') return '<span class="card-badge badge-sale">⚡ СКИДКА</span>';
+      if (badge === 'new') return '<span class="card-badge badge-new">✨ NEW</span>';
+      if (badge === 'top') return '<span class="card-badge badge-top">💎 ТОП</span>';
       if (oldPrice && oldPrice > price) {
         const discountPercent = Math.round(((oldPrice - price) / oldPrice) * 100);
-        return `<span class="glass-badge badge-sale">-${discountPercent}%</span>`;
+        return `<span class="card-badge badge-sale">-${discountPercent}%</span>`;
       }
       return '';
     }
@@ -2117,7 +2111,7 @@
         const isActive = cat.id === activeCategory;
         const iconSvg = SVG_ICONS[cat.iconKey] || SVG_ICONS.games;
         html += `
-          <div class="cat-pill ${isActive ? 'active' : ''}" data-id="${escapeHtml(cat.id)}" onclick="setCategory('${escapeHtml(cat.id)}')">
+          <div class="cat-chip ${isActive ? 'active' : ''}" data-id="${escapeHtml(cat.id)}" onclick="setCategory('${escapeHtml(cat.id)}')">
             ${iconSvg}
             <span>${escapeHtml(cat.name)}</span>
             ${cat.id !== 'all' ? `<span class="cat-delete-btn" onclick="event.stopPropagation(); deleteCategory('${escapeHtml(cat.id)}')">✕</span>` : ''}
@@ -2126,7 +2120,7 @@
       });
 
       if (isAdmin) {
-        html += `<button class="btn-add-cat-pill" onclick="openAddCatModal()">+ Категория</button>`;
+        html += `<button class="btn-add-cat" onclick="openAddCatModal()">+ Категория</button>`;
       }
 
       bar.innerHTML = html;
@@ -2161,8 +2155,8 @@
       if (filtered.length === 0) {
         grid.innerHTML = `
           <div style="grid-column: span 2; text-align:center; padding: 50px 20px; color:var(--text-muted);">
-            <div style="font-size:38px; margin-bottom:8px;">📦</div>
-            <div style="font-size:14.5px; font-weight:700; color:var(--text-pure);">Товары не найдены</div>
+            <div style="font-size:36px; margin-bottom:8px;">📦</div>
+            <div style="font-size:14px; font-weight:700; color:var(--text-title);">Товары не найдены</div>
             <div style="font-size:12px; margin-top:4px;">Попробуйте выбрать другую категорию</div>
           </div>
         `;
@@ -2174,14 +2168,14 @@
         const badgeHtml = getBadgeHtml(prod.badge, prod.price, prod.oldPrice);
         const imgHtml = prod.img 
           ? `<img src="${escapeHtml(prod.img)}" class="card-img" alt="${escapeHtml(prod.name)}" loading="lazy">` 
-          : `<div style="color:var(--text-muted); font-size:26px;">🎮</div>`;
+          : `<div style="color:var(--text-muted); font-size:24px;">🎮</div>`;
 
         const stockTag = (prod.stockCount && prod.stockCount > 0) 
-          ? `<span class="glass-stock-pill">⚡ ${prod.stockCount} шт</span>` 
+          ? `<span class="card-stock-pill">⚡ ${prod.stockCount} шт</span>` 
           : '';
 
         html += `
-          <div class="glass-card">
+          <div class="product-card">
             <div class="card-cover">
               ${badgeHtml}
               ${stockTag}
@@ -2199,7 +2193,7 @@
                   ${prod.oldPrice && prod.oldPrice > prod.price ? `<span class="price-old">${prod.oldPrice.toLocaleString()} ₽</span>` : ''}
                   <span class="price-val">${prod.price.toLocaleString()} ₽</span>
                 </div>
-                <button class="btn-buy-glass" onclick="addToCart('${escapeHtml(prod.id)}')" title="В корзину">
+                <button class="btn-buy-card" onclick="addToCart('${escapeHtml(prod.id)}')" title="В корзину">
                   <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
                 </button>
               </div>
@@ -2292,7 +2286,6 @@
       const subtotalEl = document.getElementById('modalCartSubtotalSum');
       if (subtotalEl) subtotalEl.innerText = `${subtotal.toLocaleString()} ₽`;
 
-      // скидка по промокоду
       const discountRow = document.getElementById('modalCartDiscountRow');
       const discountSumEl = document.getElementById('modalCartDiscountSum');
       if (appliedDiscountRub > 0) {
@@ -2302,7 +2295,6 @@
         discountRow.style.display = 'none';
       }
 
-      // списание бонусов
       let bonusUsed = 0;
       const bonusRow = document.getElementById('modalCartBonusRow');
       const bonusSumEl = document.getElementById('modalCartBonusSum');
@@ -2358,18 +2350,18 @@
           activePromoCode = code;
           appliedDiscountRub = res.discountRub || 0;
           msgEl.style.display = 'block';
-          msgEl.style.color = 'var(--liquid-aqua)';
+          msgEl.style.color = 'var(--accent-primary)';
           msgEl.innerText = `✅ Промокод применен: -${appliedDiscountRub.toLocaleString()} ₽`;
         } else {
           activePromoCode = '';
           appliedDiscountRub = 0;
           msgEl.style.display = 'block';
-          msgEl.style.color = '#ff6b6b';
+          msgEl.style.color = '#ef4444';
           msgEl.innerText = `❌ ${res.message}`;
         }
       } catch (err) {
         msgEl.style.display = 'block';
-        msgEl.style.color = '#ff6b6b';
+        msgEl.style.color = '#ef4444';
         msgEl.innerText = `❌ Ошибка проверки промокода`;
       }
 
@@ -2381,7 +2373,7 @@
       if (!listEl) return;
 
       if (cart.length === 0) {
-        listEl.innerHTML = `<div style="text-align:center; padding:30px 10px; color:var(--text-muted); font-size:13.5px;">Корзина пуста</div>`;
+        listEl.innerHTML = `<div style="text-align:center; padding:30px 10px; color:var(--text-muted); font-size:13px;">Корзина пуста</div>`;
         return;
       }
 
@@ -2394,7 +2386,7 @@
         const imgHtml = prod.img ? `<img src="${escapeHtml(prod.img)}" class="cart-item-thumb">` : `<div class="cart-item-thumb" style="display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:14px;">🎮</div>`;
 
         html += `
-          <div class="cart-glass-item">
+          <div class="cart-row-item">
             <div class="cart-item-left">
               ${imgHtml}
               <div class="cart-item-info">
@@ -2403,9 +2395,9 @@
               </div>
             </div>
             <div class="cart-item-controls">
-              <button class="btn-qty-glass" onclick="changeCartQty('${escapeHtml(prod.id)}', -1)">-</button>
+              <button class="btn-qty" onclick="changeCartQty('${escapeHtml(prod.id)}', -1)">-</button>
               <span class="cart-qty-val">${item.qty}</span>
-              <button class="btn-qty-glass" onclick="changeCartQty('${escapeHtml(prod.id)}', 1)">+</button>
+              <button class="btn-qty" onclick="changeCartQty('${escapeHtml(prod.id)}', 1)">+</button>
             </div>
           </div>
         `;
@@ -2473,7 +2465,7 @@
         const order = res.order;
         const payment = res.payment || {};
 
-        // 1. Telegram Stars (Native Invoice)
+        // 1. Telegram Stars
         if (payment.invoiceLink && window.Telegram?.WebApp?.openInvoice) {
           window.Telegram.WebApp.openInvoice(payment.invoiceLink, function(status) {
             if (status === 'paid') {
@@ -2486,7 +2478,7 @@
           return;
         }
 
-        // 2. CryptoBot (Direct URL)
+        // 2. CryptoBot
         if (payment.method === 'cryptobot' && payment.payUrl) {
           try {
             if (window.Telegram?.WebApp?.openTelegramLink && payment.payUrl.includes('t.me/')) {
@@ -2503,7 +2495,7 @@
           return;
         }
 
-        // 3. Aaio (Карты РФ / СБП)
+        // 3. Aaio
         if (payment.method === 'aaio' && payment.payUrl) {
           try {
             if (window.Telegram?.WebApp?.openLink) {
@@ -2518,7 +2510,7 @@
           return;
         }
 
-        // 4. Прямой перевод СБП
+        // 4. СБП
         if (payment.method === 'sbp' && payment.sbpInfo) {
           document.getElementById('sbpModalSum').innerText = `${order.totalRub.toLocaleString()} ₽`;
           document.getElementById('sbpModalPhone').innerText = payment.sbpInfo.phone || '-';
@@ -2871,12 +2863,12 @@
         promos.forEach(p => {
           const typeStr = p.discountType === 'percent' ? `${p.discountVal}%` : `${p.discountVal} ₽`;
           html += `
-            <div style="background:rgba(0,0,0,0.35); border:1px solid var(--glass-border); padding:10px 14px; border-radius:var(--radius-md); margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
+            <div style="background:var(--bg-card); border:1px solid var(--border-subtle); padding:10px 12px; border-radius:var(--radius-sm); margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
               <div>
-                <b style="color:var(--liquid-aqua); font-size:13.5px;">${escapeHtml(p.code)}</b>
-                <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">Скидка: ${typeStr} • Использован: ${p.usesCount || 0} раз</div>
+                <b style="color:var(--accent-primary); font-size:13px;">${escapeHtml(p.code)}</b>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Скидка: ${typeStr} • Использован: ${p.usesCount || 0} раз</div>
               </div>
-              <button class="btn-clear-glass" onclick="deletePromo('${escapeHtml(p.code)}')">Удалить</button>
+              <button class="btn-clear-cart" onclick="deletePromo('${escapeHtml(p.code)}')">Удалить</button>
             </div>
           `;
         });
