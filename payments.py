@@ -60,7 +60,7 @@ async def create_cryptobot_invoice(
         return None
 
 def verify_cryptobot_webhook(body_bytes: bytes, signature_header: str, api_token: str) -> bool:
-    if not signature_header or not api_token:
+    if not signature_header or not api_token or api_token.startswith("YOUR_"):
         return False
     try:
         secret = hashlib.sha256(api_token.encode("utf-8")).digest()
@@ -116,7 +116,7 @@ def create_aaio_payment_url(
     description: str = "Оплата заказа",
     currency: str = "RUB"
 ) -> Optional[str]:
-    if not merchant_id or not secret_1 or merchant_id.startswith("YOUR_"):
+    if not merchant_id or not secret_1 or merchant_id.startswith("YOUR_") or secret_1.startswith("YOUR_"):
         return None
 
     try:
@@ -146,7 +146,7 @@ def verify_aaio_webhook(
     currency: str,
     received_sign: str
 ) -> bool:
-    if not merchant_id or not secret_2 or not received_sign:
+    if not merchant_id or not secret_2 or not received_sign or secret_2.startswith("YOUR_"):
         return False
     try:
         sign_str = f"{merchant_id}:{amount}:{currency}:{secret_2}:{order_id}"

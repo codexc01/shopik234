@@ -2,6 +2,8 @@ import os
 import sys
 import uuid
 import json
+import time
+import html
 import logging
 import threading
 import asyncio
@@ -12,7 +14,7 @@ from fastapi import FastAPI, APIRouter, Request, HTTPException, Depends, Header,
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 import database as db
 import payments
@@ -48,7 +50,7 @@ os.makedirs(UPLOADS_DIR, exist_ok=True)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("norvex_server")
 
-app = FastAPI(title="NORVEX SHOP Luxury API", version="3.0.0")
+app = FastAPI(title="NORVEX SHOP Luxury API", version="3.1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -61,29 +63,29 @@ app.add_middleware(
 # статика для картинок
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
-# проверка пользователя телеграм
+# проверка пользователя телеграм (безопасная проверка с защитой админки)
 async def get_current_tg_user(authorization: Optional[str] = Header(None)) -> Dict[str, Any]:
     if not authorization:
-        return {"user_id": 999999, "username": "local_dev", "is_admin": True, "is_local": True}
+        return {"user_id": None, "username": "guest", "is_admin": False, "is_guest": True}
 
     token = authorization.replace("Bearer ", "").strip()
-    if not token or token == "null" or token == "undefined":
-        return {"user_id": 999999, "username": "local_dev", "is_admin": True, "is_local": True}
+    if not token or token in ["null", "undefined", "none", ""]:
+        return {"user_id": None, "username": "guest", "is_admin": False, "is_guest": True}
 
     auth_result = validate_telegram_init_data(token, BOT_TOKEN, ADMIN_IDS)
     if not auth_result:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Недействительная подпись Telegram initData"
+            detail="Недействительная или устаревшая подпись Telegram initData"
         )
     return auth_result
 
-# проверка прав админа
+# проверка прав админа (строгий запрет для гостей)
 async def require_admin(user: Dict[str, Any] = Depends(get_current_tg_user)) -> Dict[str, Any]:
     if not user.get("is_admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Доступ только для админа"
+            detail="Доступ запрещен: требуются права администратора"
         )
     return user
 
@@ -112,24 +114,24 @@ class ProductUpdate(BaseModel):
 
 class OrderItemInput(BaseModel):
     id: str
-    qty: int = 1
+    qty: int = Field(default=1, ge=1, le=100)
 
 class OrderCreateRequest(BaseModel):
     items: List[OrderItemInput]
     paymentMethod: Optional[str] = "manual"
     promoCode: Optional[str] = ""
-    useBonus: Optional[int] = 0
+    useBonus: Optional[int] = Field(default=0, ge=0)
 
 class PromoValidateRequest(BaseModel):
     code: str
-    totalRub: int
+    totalRub: int = Field(..., ge=0)
 
 class PromoCreateRequest(BaseModel):
     code: str
     discountType: str = "percent" # "percent" | "fixed"
-    discountVal: float
-    minOrder: Optional[int] = 0
-    maxUses: Optional[int] = 0
+    discountVal: float = Field(..., gt=0)
+    minOrder: Optional[int] = Field(default=0, ge=0)
+    maxUses: Optional[int] = Field(default=0, ge=0)
 
 class StockAddRequest(BaseModel):
     keys: List[str]
@@ -143,7 +145,7 @@ class BroadcastRequest(BaseModel):
 class SettingsUpdate(BaseModel):
     botUsername: Optional[str] = None
     storeTitle: Optional[str] = None
-    refPercent: Optional[int] = 5
+    refPercent: Optional[int] = Field(default=5, ge=0, le=50)
 
 class PaymentSettingsUpdate(BaseModel):
     cryptobotEnabled: Optional[bool] = None
@@ -190,7 +192,7 @@ async def bootstrap(user: Dict[str, Any] = Depends(get_current_tg_user)):
     user_info = user.get("user") or {}
     
     # авторегистрация пользователя
-    if user_id and user_id != 999999:
+    if user_id:
         db.register_bot_user(
             user_id=user_id,
             username=user.get("username", ""),
@@ -252,14 +254,14 @@ def get_public_payment_methods() -> Dict[str, Any]:
 @router.get("/profile")
 async def get_profile(user: Dict[str, Any] = Depends(get_current_tg_user)):
     user_id = user.get("user_id")
-    profile = db.get_user_profile(user_id)
+    profile = db.get_user_profile(user_id) if user_id else {}
     return {"ok": True, "profile": profile}
 
 # история покупок пользователя
 @router.get("/my-orders")
 async def get_my_orders(user: Dict[str, Any] = Depends(get_current_tg_user)):
     user_id = user.get("user_id")
-    orders = db.get_user_orders(user_id)
+    orders = db.get_user_orders(user_id) if user_id else []
     return {"ok": True, "orders": orders}
 
 # проверка промокода
@@ -294,17 +296,19 @@ async def create_order(payload: OrderCreateRequest, user: Dict[str, Any] = Depen
         buyer_id = user.get("user_id")
         user_info = user.get("user") or {}
         buyer_name = user_info.get("first_name") or user.get("username") or "Покупатель"
-        buyer_username = user.get("username") or f"ID: {buyer_id}"
+        buyer_username = user.get("username") or (f"ID: {buyer_id}" if buyer_id else "Гость")
         payment_method = (payload.paymentMethod or "manual").lower()
 
-        raw_items = [{"id": it.id, "qty": it.qty} for it in payload.items]
+        raw_items = [{"id": it.id, "qty": max(1, min(it.qty, 100))} for it in payload.items]
+        bonus_to_use = payload.useBonus if buyer_id else 0
+        
         order_data, verified_items = db.create_secure_order(
             buyer_id=buyer_id, 
             buyer_name=buyer_name, 
             buyer_username=buyer_username, 
             client_items=raw_items,
             promo_code=payload.promoCode or "",
-            use_bonus=payload.useBonus or 0
+            use_bonus=bonus_to_use
         )
         order_code = order_data["orderId"]
         total_rub = order_data["totalRub"]
@@ -604,8 +608,8 @@ async def cryptobot_webhook(request: Request):
     sig = request.headers.get("crypto-pay-api-signature", "")
     token = db.get_setting("cryptobot_token", os.environ.get("CRYPTOBOT_TOKEN", ""))
     
-    if token and not payments.verify_cryptobot_webhook(raw_body, sig, token):
-        raise HTTPException(status_code=400, detail="Неверная подпись CryptoBot")
+    if not token or not payments.verify_cryptobot_webhook(raw_body, sig, token):
+        raise HTTPException(status_code=400, detail="Неверная или отсутствующая подпись CryptoBot")
 
     try:
         data = json.loads(raw_body.decode("utf-8"))
@@ -614,9 +618,9 @@ async def cryptobot_webhook(request: Request):
 
         if update_type == "invoice_paid":
             order_code = payload.get("payload")
-            invoice_id = str(payload.get("invoice_id"))
-            amount = payload.get("amount")
-            asset = payload.get("asset")
+            invoice_id = str(payload.get("invoice_id", ""))
+            amount = payload.get("amount", "")
+            asset = payload.get("asset", "")
             if order_code:
                 notify_order_paid(order_code, f"CryptoBot ({amount} {asset})", invoice_id)
         return {"ok": True}
@@ -635,8 +639,8 @@ async def aaio_webhook(request: Request):
     sign = str(form_data.get("sign", ""))
 
     s_2 = db.get_setting("aaio_secret_2", os.environ.get("AAIO_SECRET_2", ""))
-    if s_2 and not payments.verify_aaio_webhook(merchant_id, s_2, order_id, amount, currency, sign):
-        raise HTTPException(status_code=400, detail="Неверная подпись Aaio")
+    if not s_2 or not payments.verify_aaio_webhook(merchant_id, s_2, order_id, amount, currency, sign):
+        raise HTTPException(status_code=400, detail="Неверная или отсутствующая подпись Aaio")
 
     try:
         notify_order_paid(order_id, f"Aaio СБП/Карты ({amount} ₽)")
@@ -649,17 +653,33 @@ async def aaio_webhook(request: Request):
 def notify_order_paid(order_code: str, payment_source: str, payment_id: Optional[str] = None):
     order = db.get_order(order_code)
     if not order:
+        logger.warning(f"notify_order_paid: заказ {order_code} не найден")
+        return
+
+    # Защита от повторной обработки (идемпотентность вебхуков)
+    if order.get("status") == "paid":
+        logger.info(f"Заказ {order_code} уже оплачен, повторная выдача пропущена")
         return
 
     # меняем статус заказа
     db.mark_order_paid(order_code, payment_id)
 
+    # списываем бонусы и учитываем промокод в момент успешной оплаты
+    buyer_id = order.get("buyerId")
+    bonus_used = int(order.get("bonusUsed") or 0)
+    promo_code = str(order.get("promoCode") or "").strip().upper()
+    
+    if buyer_id and bonus_used > 0:
+        db.deduct_referral_bonus(buyer_id, bonus_used)
+        
+    if promo_code:
+        db.increment_promo_use(promo_code)
+
     # автовыдача ключей из пула склада
     delivered_keys = db.pop_keys_for_order(order_code, order.get("items", []))
 
     # начисление реферального бонуса пригласителю
-    buyer_id = order.get("buyerId")
-    total_rub = order.get("totalRub", 0)
+    total_rub = int(order.get("totalRub") or 0)
     ref_percent = int(db.get_setting("ref_percent", "5"))
 
     if buyer_id:
@@ -688,21 +708,22 @@ def notify_order_paid(order_code: str, payment_source: str, payment_id: Optional
         import telebot
         tg_bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
 
-        # форматируем ключи для выдачи
+        # форматируем ключи для выдачи с защитой от спецсимволов HTML
         keys_text = ""
         if delivered_keys:
             keys_text = "\n\n⚡ <b>ВАШИ КУПЛЕННЫЕ КЛЮЧИ / ДАННЫЕ:</b>\n"
             for dk in delivered_keys:
-                keys_text += f"\n📦 <b>{dk['productName']}:</b>\n"
-                for k in dk["keys"]:
-                    keys_text += f"<code>{k}</code>\n"
+                p_name = html.escape(str(dk.get("productName", "")))
+                keys_text += f"\n📦 <b>{p_name}:</b>\n"
+                for k in dk.get("keys", []):
+                    keys_text += f"<code>{html.escape(str(k))}</code>\n"
 
         # сообщение клиенту
         if buyer_id:
             try:
                 buyer_msg = (
-                    f"🎉 <b>Заказ #{order_code} успешно оплачен!</b>\n\n"
-                    f"💳 <b>Способ:</b> {payment_source}\n"
+                    f"🎉 <b>Заказ #{html.escape(order_code)} успешно оплачен!</b>\n\n"
+                    f"💳 <b>Способ:</b> {html.escape(payment_source)}\n"
                     f"💵 <b>Сумма:</b> {total_rub:,} ₽"
                     f"{keys_text}\n\n"
                     f"✨ Купленные ключи также сохранены в вашем приложении во вкладке «Мои покупки»"
@@ -712,11 +733,13 @@ def notify_order_paid(order_code: str, payment_source: str, payment_id: Optional
                 logger.warning(f"не удалось отправить чек клиенту: {e}")
 
         # сообщение админам
+        b_name = html.escape(str(order.get("buyerName") or "Клиент"))
+        b_user = html.escape(str(order.get("buyerUsername") or f"ID: {buyer_id}"))
         admin_msg = (
-            f"💰 <b>ПОЛУЧЕНА ОПЛАТА ПО ЗАКАЗУ #{order_code}</b>\n\n"
-            f"👤 <b>Клиент:</b> {order.get('buyerName')} (@{order.get('buyerUsername')})\n"
+            f"💰 <b>ПОЛУЧЕНА ОПЛАТА ПО ЗАКАЗУ #{html.escape(order_code)}</b>\n\n"
+            f"👤 <b>Клиент:</b> {b_name} (@{b_user})\n"
             f"💵 <b>Сумма:</b> <code>{total_rub:,} ₽</code>\n"
-            f"💳 <b>Способ:</b> {payment_source}\n"
+            f"💳 <b>Способ:</b> {html.escape(payment_source)}\n"
             f"⚡ <b>Автовыдача:</b> {'Выдано ' + str(len(delivered_keys)) + ' поз.' if delivered_keys else 'Ручная выдача'}"
         )
         for adm in ADMIN_IDS:
@@ -810,22 +833,27 @@ def send_order_bot_notifications(order_data: Dict[str, Any], verified_items: Lis
         from telebot import types
         tg_bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
 
-        order_id = order_data["orderId"]
+        order_id = html.escape(str(order_data.get("orderId", "")))
         buyer_id = order_data.get("buyerId")
-        buyer_name = order_data.get("buyerName", "Клиент")
-        buyer_username = f"@{order_data['buyerUsername']}" if order_data.get("buyerUsername") and not order_data['buyerUsername'].startswith("ID:") else order_data.get("buyerUsername", "")
-        total_rub = order_data["totalRub"]
-        total_count = order_data["totalCount"]
+        buyer_name = html.escape(str(order_data.get("buyerName", "Клиент")))
+        raw_username = str(order_data.get("buyerUsername", "") or "")
+        buyer_username = f"@{html.escape(raw_username)}" if raw_username and not raw_username.startswith("ID:") else html.escape(raw_username)
+        total_rub = int(order_data.get("totalRub", 0))
+        total_count = int(order_data.get("totalCount", 0))
         pm_method = payment_result.get("method", "manual")
-        discount_rub = order_data.get("discountRub", 0)
-        bonus_used = order_data.get("bonusUsed", 0)
+        discount_rub = int(order_data.get("discountRub", 0))
+        bonus_used = int(order_data.get("bonusUsed", 0))
 
         if buyer_id:
             order_buyers_cache[order_id] = buyer_id
 
         items_text = ""
         for i, it in enumerate(verified_items, start=1):
-            items_text += f"{i}. <b>{it['name']}</b>: {it['qty']} шт × {it['price']:,} ₽ = <b>{it['subtotal']:,} ₽</b>\n"
+            it_name = html.escape(str(it.get("name", "Товар")))
+            it_qty = int(it.get("qty", 1))
+            it_price = int(it.get("price", 0))
+            it_subtotal = int(it.get("subtotal", 0))
+            items_text += f"{i}. <b>{it_name}</b>: {it_qty} шт × {it_price:,} ₽ = <b>{it_subtotal:,} ₽</b>\n"
 
         pm_titles = {
             "cryptobot": "💎 CryptoBot (USDT / TON)",
@@ -834,7 +862,7 @@ def send_order_bot_notifications(order_data: Dict[str, Any], verified_items: Lis
             "sbp": "📱 Прямой перевод СБП",
             "manual": "💬 Согласование с менеджером"
         }
-        pm_title = pm_titles.get(pm_method, pm_method)
+        pm_title = html.escape(pm_titles.get(pm_method, str(pm_method)))
 
         extra_info = ""
         if discount_rub > 0:

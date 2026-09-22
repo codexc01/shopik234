@@ -331,7 +331,7 @@ def get_product(prod_id: str) -> Optional[Dict[str, Any]]:
     conn.close()
     return res
 
-def create_product(name: str, category_id: str, price: int, old_price: int, badge: str, image_url: str, description: str) -> Dict[str, Any]:
+def create_product(name: str, category_id: str, price: int, old_price: int = 0, badge: str = "", image_url: str = "", description: str = "") -> Dict[str, Any]:
     conn = get_connection()
     cur = conn.cursor()
     prod_id = f"prod_{int(time.time() * 1000)}"
@@ -354,7 +354,7 @@ def create_product(name: str, category_id: str, price: int, old_price: int, badg
         "stockCount": 0
     }
 
-def update_product(prod_id: str, name: str, category_id: str, price: int, old_price: int, badge: str, image_url: str, description: str) -> Optional[Dict[str, Any]]:
+def update_product(prod_id: str, name: str, category_id: str, price: int, old_price: int = 0, badge: str = "", image_url: str = "", description: str = "") -> Optional[Dict[str, Any]]:
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(placeholder("""
@@ -412,11 +412,22 @@ def get_product_stock(product_id: str) -> List[Dict[str, Any]]:
 def pop_keys_for_order(order_code: str, items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     conn = get_connection()
     cur = conn.cursor()
+    
+    # Проверка на случай если ключи уже были выданы этому заказу ранее
+    cur.execute(placeholder("SELECT delivered_keys FROM orders WHERE order_code = ?;"), (order_code,))
+    existing = cur.fetchone()
+    if existing and existing["delivered_keys"]:
+        conn.close()
+        try:
+            return json.loads(existing["delivered_keys"])
+        except Exception:
+            return []
+
     delivered = []
     
     for it in items:
         prod_id = str(it["productId"] if "productId" in it else it.get("product_id", ""))
-        qty = int(it.get("qty", 1))
+        qty = max(1, min(int(it.get("qty", 1)), 100))
         prod_name = it.get("name") or it.get("product_name", "")
         
         # выбираем свободные ключи
@@ -722,14 +733,6 @@ def create_secure_order(
         VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?);
         """, (order_code, buyer_id, buyer_name, buyer_username, final_total_rub, total_count, discount_rub, valid_promo, actual_bonus_used))
         order_db_id = cur.lastrowid
-
-    # списание бонусов если использовались
-    if buyer_id and actual_bonus_used > 0:
-        deduct_referral_bonus(buyer_id, actual_bonus_used)
-
-    # учет использования промокода
-    if valid_promo:
-        increment_promo_use(valid_promo)
 
     # запись позиций заказа
     for vi in verified_items:
