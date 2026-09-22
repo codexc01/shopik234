@@ -1187,9 +1187,162 @@
       font-weight: 800;
       color: var(--accent-primary);
     }
+
+    /* Cinematic Norvex Splash Intro */
+    #norvex-splash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      background: radial-gradient(circle at center, #131622 0%, #08090d 100%);
+      z-index: 999999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.55s;
+      pointer-events: all;
+    }
+
+    #norvex-splash.splash-hide {
+      opacity: 0;
+      transform: scale(1.06);
+      pointer-events: none;
+      visibility: hidden;
+    }
+
+    .splash-glow {
+      position: absolute;
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.32) 0%, rgba(16, 185, 129, 0) 70%);
+      filter: blur(48px);
+      animation: splashPulse 2.4s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    .splash-content {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      z-index: 2;
+    }
+
+    .splash-icon-box {
+      width: 74px;
+      height: 74px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03));
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      animation: splashIconReveal 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .splash-logo-text {
+      display: flex;
+      gap: 4px;
+      font-family: var(--font-display);
+      font-size: 40px;
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      color: #ffffff;
+      text-shadow: 0 4px 28px rgba(16, 185, 129, 0.45);
+    }
+
+    .splash-letter {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(22px) scale(0.85);
+      filter: blur(8px);
+      animation: letterReveal 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .splash-letter:nth-child(1) { animation-delay: 0.08s; }
+    .splash-letter:nth-child(2) { animation-delay: 0.16s; }
+    .splash-letter:nth-child(3) { animation-delay: 0.24s; }
+    .splash-letter:nth-child(4) { animation-delay: 0.32s; }
+    .splash-letter:nth-child(5) { animation-delay: 0.40s; }
+    .splash-letter:nth-child(6) { animation-delay: 0.48s; }
+
+    .splash-subtext {
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.6);
+      opacity: 0;
+      transform: translateY(12px);
+      animation: subtextReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.52s forwards;
+    }
+
+    .splash-shimmer-line {
+      width: 54px;
+      height: 2.5px;
+      border-radius: 99px;
+      background: linear-gradient(90deg, transparent, #10b981, transparent);
+      margin-top: 4px;
+      opacity: 0;
+      animation: shimmerLine 0.9s ease-out 0.65s forwards;
+    }
+
+    @keyframes splashIconReveal {
+      0% { opacity: 0; transform: scale(0.6) rotate(-8deg); filter: blur(10px); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); filter: blur(0); }
+    }
+
+    @keyframes letterReveal {
+      0% { opacity: 0; transform: translateY(22px) scale(0.85); filter: blur(8px); }
+      100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    }
+
+    @keyframes subtextReveal {
+      0% { opacity: 0; transform: translateY(12px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes shimmerLine {
+      0% { opacity: 0; width: 0px; }
+      100% { opacity: 1; width: 64px; }
+    }
+
+    @keyframes splashPulse {
+      0% { transform: scale(0.88); opacity: 0.5; }
+      100% { transform: scale(1.18); opacity: 0.95; }
+    }
   </style>
 </head>
 <body>
+
+  <!-- Cinematic Norvex Splash Intro -->
+  <div id="norvex-splash" onclick="dismissSplash()">
+    <div class="splash-glow"></div>
+    <div class="splash-content">
+      <div class="splash-icon-box">⚡</div>
+      <div class="splash-logo-text">
+        <span class="splash-letter">N</span>
+        <span class="splash-letter">O</span>
+        <span class="splash-letter">R</span>
+        <span class="splash-letter">V</span>
+        <span class="splash-letter">E</span>
+        <span class="splash-letter">X</span>
+      </div>
+      <div class="splash-subtext">PREMIUM DIGITAL STORE</div>
+      <div class="splash-shimmer-line"></div>
+    </div>
+  </div>
 
   <div class="app-viewport">
     <!-- Header -->
@@ -2950,9 +3103,20 @@
       }
     };
 
-    document.getElementById('searchInput')?.addEventListener('input', () => {
-      renderProducts();
-    });
+    window.dismissSplash = function() {
+      const splash = document.getElementById('norvex-splash');
+      if (splash && !splash.classList.contains('splash-hide')) {
+        splash.classList.add('splash-hide');
+        setTimeout(() => {
+          if (splash.parentNode) splash.parentNode.removeChild(splash);
+        }, 600);
+      }
+    };
+
+    // Автоматическое скрытие заставки после завершения анимации
+    setTimeout(() => {
+      window.dismissSplash();
+    }, 1800);
 
     // Start App
     loadBootstrap();
