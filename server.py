@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 import database as db
+import payments
 from auth import validate_telegram_init_data
 
 # чтение .env если есть
@@ -46,7 +47,7 @@ os.makedirs(UPLOADS_DIR, exist_ok=True)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("norvex_server")
 
-app = FastAPI(title="NORVEX SHOP Backend API", version="2.0.0")
+app = FastAPI(title="NORVEX SHOP Backend API", version="2.1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -62,7 +63,6 @@ app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 # проверка пользователя телеграм
 async def get_current_tg_user(authorization: Optional[str] = Header(None)) -> Dict[str, Any]:
     if not authorization:
-        # локальный режим если тестируем без телеграма
         return {"user_id": 999999, "username": "local_dev", "is_admin": True, "is_local": True}
 
     token = authorization.replace("Bearer ", "").strip()
@@ -115,12 +115,30 @@ class OrderItemInput(BaseModel):
 
 class OrderCreateRequest(BaseModel):
     items: List[OrderItemInput]
+    paymentMethod: Optional[str] = "manual"
 
 class SettingsUpdate(BaseModel):
     botUsername: Optional[str] = None
     storeTitle: Optional[str] = None
 
+class PaymentSettingsUpdate(BaseModel):
+    cryptobotEnabled: Optional[bool] = None
+    cryptobotToken: Optional[str] = None
+    starsEnabled: Optional[bool] = None
+    starsRate: Optional[float] = None
+    aaioEnabled: Optional[bool] = None
+    aaioMerchantId: Optional[str] = None
+    aaioSecret1: Optional[str] = None
+    aaioSecret2: Optional[str] = None
+    sbpEnabled: Optional[bool] = None
+    sbpPhone: Optional[str] = None
+    sbpBank: Optional[str] = None
+    sbpRecipient: Optional[str] = None
+
 router = APIRouter()
+
+# кэш покупателей для ответов через реплай
+order_buyers_cache = {}
 
 # главная страница магазина
 @app.get("/")
@@ -151,6 +169,9 @@ async def bootstrap(user: Dict[str, Any] = Depends(get_current_tg_user)):
     store_title = db.get_setting("store_title", "NORVEX SHOP")
     bot_handle = db.get_setting("tg_bot_handle", "NorvexShopBot")
 
+    # доступные платежные методы
+    payment_methods = get_public_payment_methods()
+
     return {
         "ok": True,
         "isAdmin": user.get("is_admin", False),
@@ -158,8 +179,94 @@ async def bootstrap(user: Dict[str, Any] = Depends(get_current_tg_user)):
         "storeTitle": store_title,
         "botHandle": bot_handle,
         "categories": categories,
-        "products": products
+        "products": products,
+        "paymentMethods": payment_methods
     }
+
+def get_public_payment_methods() -> Dict[str, Any]:
+    cryptobot_token = db.get_setting("cryptobot_token", os.environ.get("CRYPTOBOT_TOKEN", ""))
+    cryptobot_enabled = db.get_setting("cryptobot_enabled", "true" if cryptobot_token else "false") == "true"
+    
+    stars_enabled = db.get_setting("stars_enabled", "true") == "true"
+    stars_rate = float(db.get_setting("stars_rate", "2.0")) # 1 Star = 2 RUB
+    
+    aaio_merchant = db.get_setting("aaio_merchant_id", os.environ.get("AAIO_MERCHANT_ID", ""))
+    aaio_enabled = db.get_setting("aaio_enabled", "true" if aaio_merchant else "false") == "true"
+    
+    sbp_enabled = db.get_setting("sbp_enabled", "true") == "true"
+    sbp_phone = db.get_setting("sbp_phone", "")
+    sbp_bank = db.get_setting("sbp_bank", "СБП / Т-Банк / Сбер")
+    sbp_recipient = db.get_setting("sbp_recipient", "")
+
+    return {
+        "cryptobot": {"enabled": cryptobot_enabled, "name": "CryptoBot (USDT, TON, BTC)", "icon": "💎"},
+        "stars": {"enabled": stars_enabled, "name": "Telegram Stars (Звёзды)", "icon": "⭐", "rate": stars_rate},
+        "aaio": {"enabled": aaio_enabled, "name": "Карты РФ / СБП (Aaio)", "icon": "💳"},
+        "sbp": {
+            "enabled": sbp_enabled,
+            "name": "Прямой перевод СБП",
+            "icon": "📱",
+            "phone": sbp_phone,
+            "bank": sbp_bank,
+            "recipient": sbp_recipient
+        }
+    }
+
+# список доступных способов оплаты
+@router.get("/payment-methods")
+async def list_payment_methods():
+    return {"ok": True, "methods": get_public_payment_methods()}
+
+# настройки платежек для админки
+@router.get("/admin/payment-settings")
+async def get_admin_payment_settings(admin: Dict[str, Any] = Depends(require_admin)):
+    return {
+        "ok": True,
+        "cryptobotEnabled": db.get_setting("cryptobot_enabled", "false") == "true",
+        "cryptobotToken": db.get_setting("cryptobot_token", os.environ.get("CRYPTOBOT_TOKEN", "")),
+        "starsEnabled": db.get_setting("stars_enabled", "true") == "true",
+        "starsRate": float(db.get_setting("stars_rate", "2.0")),
+        "aaioEnabled": db.get_setting("aaio_enabled", "false") == "true",
+        "aaioMerchantId": db.get_setting("aaio_merchant_id", os.environ.get("AAIO_MERCHANT_ID", "")),
+        "aaioSecret1": db.get_setting("aaio_secret_1", os.environ.get("AAIO_SECRET_1", "")),
+        "aaioSecret2": db.get_setting("aaio_secret_2", os.environ.get("AAIO_SECRET_2", "")),
+        "sbpEnabled": db.get_setting("sbp_enabled", "true") == "true",
+        "sbpPhone": db.get_setting("sbp_phone", ""),
+        "sbpBank": db.get_setting("sbp_bank", "СБП"),
+        "sbpRecipient": db.get_setting("sbp_recipient", "")
+    }
+
+@router.post("/admin/payment-settings")
+async def save_admin_payment_settings(payload: PaymentSettingsUpdate, admin: Dict[str, Any] = Depends(require_admin)):
+    if payload.cryptobotEnabled is not None:
+        db.set_setting("cryptobot_enabled", "true" if payload.cryptobotEnabled else "false")
+    if payload.cryptobotToken is not None:
+        db.set_setting("cryptobot_token", payload.cryptobotToken.strip())
+        
+    if payload.starsEnabled is not None:
+        db.set_setting("stars_enabled", "true" if payload.starsEnabled else "false")
+    if payload.starsRate is not None:
+        db.set_setting("stars_rate", str(payload.starsRate))
+        
+    if payload.aaioEnabled is not None:
+        db.set_setting("aaio_enabled", "true" if payload.aaioEnabled else "false")
+    if payload.aaioMerchantId is not None:
+        db.set_setting("aaio_merchant_id", payload.aaioMerchantId.strip())
+    if payload.aaioSecret1 is not None:
+        db.set_setting("aaio_secret_1", payload.aaioSecret1.strip())
+    if payload.aaioSecret2 is not None:
+        db.set_setting("aaio_secret_2", payload.aaioSecret2.strip())
+        
+    if payload.sbpEnabled is not None:
+        db.set_setting("sbp_enabled", "true" if payload.sbpEnabled else "false")
+    if payload.sbpPhone is not None:
+        db.set_setting("sbp_phone", payload.sbpPhone.strip())
+    if payload.sbpBank is not None:
+        db.set_setting("sbp_bank", payload.sbpBank.strip())
+    if payload.sbpRecipient is not None:
+        db.set_setting("sbp_recipient", payload.sbpRecipient.strip())
+
+    return {"ok": True, "message": "Настройки платежей сохранены"}
 
 # список товаров
 @router.get("/products")
@@ -173,7 +280,7 @@ async def list_categories():
     categories = db.get_categories()
     return {"ok": True, "categories": categories}
 
-# оформление заказа с серверным расчетом цены
+# оформление заказа с серверным расчетом цены и генерацией счета
 @router.post("/orders")
 async def create_order(payload: OrderCreateRequest, user: Dict[str, Any] = Depends(get_current_tg_user)):
     if not payload.items:
@@ -184,40 +291,114 @@ async def create_order(payload: OrderCreateRequest, user: Dict[str, Any] = Depen
         user_info = user.get("user") or {}
         buyer_name = user_info.get("first_name") or user.get("username") or "Покупатель"
         buyer_username = user.get("username") or f"ID: {buyer_id}"
+        payment_method = (payload.paymentMethod or "manual").lower()
 
         raw_items = [{"id": it.id, "qty": it.qty} for it in payload.items]
         order_data, verified_items = db.create_secure_order(buyer_id, buyer_name, buyer_username, raw_items)
+        order_code = order_data["orderId"]
+        total_rub = order_data["totalRub"]
 
-        # отправляем чек в телеграм
-        send_order_bot_notifications(order_data, verified_items)
+        payment_result = {
+            "method": payment_method,
+            "payUrl": None,
+            "invoiceLink": None,
+            "starsAmount": None,
+            "sbpInfo": None
+        }
+
+        # 1. CryptoBot
+        if payment_method == "cryptobot":
+            cb_token = db.get_setting("cryptobot_token", os.environ.get("CRYPTOBOT_TOKEN", ""))
+            if cb_token:
+                store_title = db.get_setting("store_title", "NORVEX SHOP")
+                invoice = await payments.create_cryptobot_invoice(
+                    api_token=cb_token,
+                    order_code=order_code,
+                    amount_rub=float(total_rub),
+                    description=f"{store_title} заказ"
+                )
+                if invoice:
+                    payment_result["payUrl"] = invoice.get("pay_url")
+                    db.update_order_payment(order_code, "cryptobot", str(invoice.get("invoice_id")), invoice.get("pay_url"))
+
+        # 2. Telegram Stars
+        elif payment_method == "stars":
+            stars_rate = float(db.get_setting("stars_rate", "2.0"))
+            stars_amount = max(1, round(total_rub / (stars_rate if stars_rate > 0 else 2.0)))
+            store_title = db.get_setting("store_title", "NORVEX SHOP")
+            
+            invoice_link = await payments.create_telegram_stars_invoice_link(
+                bot_token=BOT_TOKEN,
+                order_code=order_code,
+                title=f"Заказ #{order_code}",
+                description=f"Оплата товаров в {store_title} ({len(verified_items)} поз.)",
+                stars_amount=stars_amount
+            )
+            if invoice_link:
+                payment_result["invoiceLink"] = invoice_link
+                payment_result["starsAmount"] = stars_amount
+                db.update_order_payment(order_code, "stars", "", invoice_link)
+
+        # 3. Aaio (Карты РФ / СБП)
+        elif payment_method == "aaio":
+            m_id = db.get_setting("aaio_merchant_id", os.environ.get("AAIO_MERCHANT_ID", ""))
+            s_1 = db.get_setting("aaio_secret_1", os.environ.get("AAIO_SECRET_1", ""))
+            if m_id and s_1:
+                store_title = db.get_setting("store_title", "NORVEX SHOP")
+                pay_url = payments.create_aaio_payment_url(
+                    merchant_id=m_id,
+                    secret_1=s_1,
+                    order_code=order_code,
+                    amount_rub=float(total_rub),
+                    description=f"{store_title} заказ"
+                )
+                if pay_url:
+                    payment_result["payUrl"] = pay_url
+                    db.update_order_payment(order_code, "aaio", "", pay_url)
+
+        # 4. СБП Прямой перевод
+        elif payment_method == "sbp":
+            db.update_order_payment(order_code, "sbp")
+            payment_result["sbpInfo"] = {
+                "phone": db.get_setting("sbp_phone", ""),
+                "bank": db.get_setting("sbp_bank", "СБП"),
+                "recipient": db.get_setting("sbp_recipient", "")
+            }
+        else:
+            db.update_order_payment(order_code, "manual")
+
+        # отправляем чек и уведомления
+        send_order_bot_notifications(order_data, verified_items, payment_result)
 
         return {
             "ok": True,
-            "order": order_data
+            "order": order_data,
+            "payment": payment_result
         }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"ошибка при создании заказа: {e}")
-        raise HTTPException(status_code=500, detail="Ошибка сервера при создании заказа")
+        logger.error(f"ошибка создания заказа: {e}")
+        raise HTTPException(status_code=500, detail="Ошибка при создании заказа")
 
-# загрузка фото на сервер
+# загрузка картинок товаров
 @router.post("/upload")
 async def upload_image(file: UploadFile = File(...), admin: Dict[str, Any] = Depends(require_admin)):
-    allowed_exts = [".jpg", ".jpeg", ".png", ".webp", ".gif"]
     ext = os.path.splitext(file.filename)[1].lower()
-    if ext not in allowed_exts:
-        raise HTTPException(status_code=400, detail="Недопустимый формат файла")
+    if ext not in [".jpg", ".jpeg", ".png", ".webp", ".gif"]:
+        ext = ".png"
 
-    filename = f"{uuid.uuid4().hex}{ext}"
-    file_path = os.path.join(UPLOADS_DIR, filename)
+    filename = f"img_{uuid.uuid4().hex[:12]}{ext}"
+    filepath = os.path.join(UPLOADS_DIR, filename)
 
-    async with aiofiles.open(file_path, "wb") as out_file:
-        while content := await file.read(1024 * 1024):
-            await out_file.write(content)
-
-    url_path = f"/uploads/{filename}"
-    return {"ok": True, "url": url_path}
+    try:
+        content = await file.read()
+        async with aiofiles.open(filepath, "wb") as f:
+            await f.write(content)
+        return {"ok": True, "url": f"/uploads/{filename}"}
+    except Exception as e:
+        logger.error(f"ошибка загрузки файла: {e}")
+        raise HTTPException(status_code=500, detail="Ошибка при сохранении изображения")
 
 # добавление товара
 @router.post("/products")
@@ -269,7 +450,7 @@ async def remove_category(cat_id: str, admin: Dict[str, Any] = Depends(require_a
     success = db.delete_category(cat_id)
     return {"ok": success}
 
-# сохранение настроек шопа
+# сохранение общих настроек шопа
 @router.post("/settings")
 async def update_settings(settings: SettingsUpdate, admin: Dict[str, Any] = Depends(require_admin)):
     if settings.storeTitle:
@@ -278,7 +459,102 @@ async def update_settings(settings: SettingsUpdate, admin: Dict[str, Any] = Depe
         db.set_setting("tg_bot_handle", settings.botUsername.replace("@", ""))
     return {"ok": True}
 
-# обработка вебхука бота
+# вебхук CryptoBot
+@router.post("/payments/cryptobot/webhook")
+async def cryptobot_webhook(request: Request):
+    raw_body = await request.body()
+    sig = request.headers.get("crypto-pay-api-signature", "")
+    token = db.get_setting("cryptobot_token", os.environ.get("CRYPTOBOT_TOKEN", ""))
+    
+    if token and not payments.verify_cryptobot_webhook(raw_body, sig, token):
+        raise HTTPException(status_code=400, detail="Неверная подпись CryptoBot")
+
+    try:
+        data = json.loads(raw_body.decode("utf-8"))
+        update_type = data.get("update_type")
+        payload = data.get("payload", {})
+
+        if update_type == "invoice_paid":
+            order_code = payload.get("payload")
+            invoice_id = str(payload.get("invoice_id"))
+            amount = payload.get("amount")
+            asset = payload.get("asset")
+            if order_code:
+                notify_order_paid(order_code, f"CryptoBot ({amount} {asset})", invoice_id)
+        return {"ok": True}
+    except Exception as e:
+        logger.error(f"ошибка cryptobot webhook: {e}")
+        return {"ok": False, "error": str(e)}
+
+# вебхук Aaio
+@router.post("/payments/aaio/webhook")
+async def aaio_webhook(request: Request):
+    form_data = await request.form()
+    merchant_id = str(form_data.get("merchant_id", ""))
+    order_id = str(form_data.get("order_id", ""))
+    amount = str(form_data.get("amount", ""))
+    currency = str(form_data.get("currency", "RUB"))
+    sign = str(form_data.get("sign", ""))
+
+    s_2 = db.get_setting("aaio_secret_2", os.environ.get("AAIO_SECRET_2", ""))
+    if s_2 and not payments.verify_aaio_webhook(merchant_id, s_2, order_id, amount, currency, sign):
+        raise HTTPException(status_code=400, detail="Неверная подпись Aaio")
+
+    try:
+        notify_order_paid(order_id, f"Aaio СБП/Карты ({amount} ₽)")
+        return "OK"
+    except Exception as e:
+        logger.error(f"ошибка aaio webhook: {e}")
+        return "ERROR"
+
+# уведомление об успешной оплате
+def notify_order_paid(order_code: str, payment_source: str, payment_id: Optional[str] = None):
+    order = db.get_order(order_code)
+    if not order:
+        return
+
+    db.mark_order_paid(order_code, payment_id)
+
+    if not BOT_TOKEN or "YOUR_BOT_TOKEN" in BOT_TOKEN:
+        return
+
+    try:
+        import telebot
+        tg_bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
+        buyer_id = order.get("buyerId")
+        total_rub = order.get("totalRub", 0)
+
+        # сообщение покупателю
+        if buyer_id:
+            try:
+                tg_bot.send_message(
+                    buyer_id,
+                    f"🎉 <b>Заказ #{order_code} успешно оплачен!</b>\n\n"
+                    f"💳 <b>Способ:</b> {payment_source}\n"
+                    f"💵 <b>Сумма:</b> {total_rub:,} ₽\n\n"
+                    f"📦 Товары уже обрабатываются и скоро будут отправлены сюда в диалог"
+                )
+            except Exception as e:
+                logger.warning(f"не удалось отправить уведомление об оплате клиенту: {e}")
+
+        # сообщение админам
+        admin_msg = (
+            f"💰 <b>ПОЛУЧЕНА ОПЛАТА ПО ЗАКАЗУ #{order_code}</b>\n\n"
+            f"👤 <b>Клиент:</b> {order.get('buyerName')} (@{order.get('buyerUsername')})\n"
+            f"💵 <b>Сумма:</b> <code>{total_rub:,} ₽</code>\n"
+            f"💳 <b>Платежка:</b> {payment_source}\n"
+            f"⚡ <b>Статус:</b> Оплачен"
+        )
+        for adm in ADMIN_IDS:
+            if adm.isdigit():
+                try:
+                    tg_bot.send_message(int(adm), admin_msg)
+                except Exception:
+                    pass
+    except Exception as e:
+        logger.error(f"ошибка отправки уведомления об оплате: {e}")
+
+# обработка вебхука бота (включая Stars)
 @router.post("/webhook")
 async def telegram_webhook(request: Request):
     if not BOT_TOKEN or "YOUR_BOT_TOKEN" in BOT_TOKEN:
@@ -289,9 +565,24 @@ async def telegram_webhook(request: Request):
         tg_bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
         update_json = await request.json()
         update = telebot.types.Update.de_json(update_json)
-        
+
+        # 1. Pre-checkout query для Telegram Stars
+        if update.pre_checkout_query:
+            tg_bot.answer_pre_checkout_query(update.pre_checkout_query.id, ok=True)
+            return {"ok": True}
+
+        # 2. Обычные сообщения и успешная оплата
         if update.message:
             msg = update.message
+            
+            # успешная оплата через Stars
+            if msg.successful_payment:
+                sp = msg.successful_payment
+                order_code = sp.invoice_payload
+                stars_count = sp.total_amount
+                notify_order_paid(order_code, f"Telegram Stars ({stars_count} ⭐)")
+                return {"ok": True}
+
             if msg.text and msg.text.startswith("/start"):
                 webapp_url = os.environ.get("WEBAPP_URL", "https://shopik234.vercel.app")
                 markup = telebot.types.InlineKeyboardMarkup()
@@ -302,7 +593,6 @@ async def telegram_webhook(request: Request):
                     reply_markup=markup
                 )
             elif msg.reply_to_message:
-                # ответ админа через реплай клиенту
                 reply_text = msg.reply_to_message.text or ""
                 order_id = None
                 if "NVX-" in reply_text:
@@ -320,15 +610,8 @@ async def telegram_webhook(request: Request):
         logger.error(f"ошибка обработки вебхука: {e}")
         return {"ok": False, "error": str(e)}
 
-# подключение роутера
-app.include_router(router)
-app.include_router(router, prefix="/api")
-
-# кэш покупателей для ответов через реплай
-order_buyers_cache = {}
-
 # отправка чеков и уведомлений о заказе
-def send_order_bot_notifications(order_data: Dict[str, Any], verified_items: List[Dict[str, Any]]):
+def send_order_bot_notifications(order_data: Dict[str, Any], verified_items: List[Dict[str, Any]], payment_result: Dict[str, Any]):
     if not BOT_TOKEN or "YOUR_BOT_TOKEN" in BOT_TOKEN:
         return
 
@@ -343,6 +626,7 @@ def send_order_bot_notifications(order_data: Dict[str, Any], verified_items: Lis
         buyer_username = f"@{order_data['buyerUsername']}" if order_data.get("buyerUsername") and not order_data['buyerUsername'].startswith("ID:") else order_data.get("buyerUsername", "")
         total_rub = order_data["totalRub"]
         total_count = order_data["totalCount"]
+        pm_method = payment_result.get("method", "manual")
 
         if buyer_id:
             order_buyers_cache[order_id] = buyer_id
@@ -352,14 +636,25 @@ def send_order_bot_notifications(order_data: Dict[str, Any], verified_items: Lis
         for i, it in enumerate(verified_items, start=1):
             items_text += f"{i}. <b>{it['name']}</b>: {it['qty']} шт × {it['price']:,} ₽ = <b>{it['subtotal']:,} ₽</b>\n"
 
+        # название метода оплаты для чека
+        pm_titles = {
+            "cryptobot": "💎 CryptoBot (USDT / TON)",
+            "stars": "⭐ Telegram Stars",
+            "aaio": "💳 Карты РФ / СБП (Aaio)",
+            "sbp": "📱 Прямой перевод СБП",
+            "manual": "💬 Согласование с менеджером"
+        }
+        pm_title = pm_titles.get(pm_method, pm_method)
+
         # чек покупателю
         if buyer_id:
             try:
                 buyer_receipt = (
                     f"✅ <b>Заказ #{order_id} принят</b>\n\n"
                     f"📦 <b>Товары:</b>\n{items_text}\n"
-                    f"💵 <b>Сумма к оплате:</b> <code>{total_rub:,} ₽</code>\n\n"
-                    f"⏳ Скоро напишем прямо сюда для оплаты"
+                    f"💵 <b>Сумма к оплате:</b> <code>{total_rub:,} ₽</code>\n"
+                    f"💳 <b>Выбранный способ:</b> {pm_title}\n\n"
+                    f"⏳ Ожидайте подтверждения или перейдите к оплате в окне магазина"
                 )
                 tg_bot.send_message(buyer_id, buyer_receipt)
             except Exception as e:
@@ -371,13 +666,15 @@ def send_order_bot_notifications(order_data: Dict[str, Any], verified_items: Lis
             f"👤 <b>Покупатель:</b> {buyer_name} ({buyer_username})\n"
             f"🆔 <b>ID клиента:</b> <code>{buyer_id}</code>\n\n"
             f"📦 <b>Товары ({total_count} шт):</b>\n{items_text}\n"
-            f"💵 <b>Сумма к оплате:</b> <code>{total_rub:,} ₽</code>\n\n"
+            f"💵 <b>Сумма к оплате:</b> <code>{total_rub:,} ₽</code>\n"
+            f"💳 <b>Способ оплаты:</b> {pm_title}\n\n"
             f"💡 <i>Ответьте через Reply на это сообщение</i>"
         )
 
         admin_markup = types.InlineKeyboardMarkup(row_width=2)
         done_btn = types.InlineKeyboardButton("✅ Заказ выполнен", callback_data=f"done_{order_id}")
-        admin_markup.add(done_btn)
+        paid_btn = types.InlineKeyboardButton("💰 Отметить оплаченным", callback_data=f"paid_{order_id}")
+        admin_markup.add(paid_btn, done_btn)
 
         for adm in ADMIN_IDS:
             if adm.isdigit():
@@ -399,10 +696,19 @@ def run_bot_listener():
         from telebot import types
         tg_bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
 
+        @tg_bot.pre_checkout_query_handler(func=lambda query: True)
+        def on_pre_checkout(pre_checkout_query):
+            tg_bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+
+        @tg_bot.message_handler(content_types=['successful_payment'])
+        def on_successful_payment(msg):
+            sp = msg.successful_payment
+            order_code = sp.invoice_payload
+            notify_order_paid(order_code, f"Telegram Stars ({sp.total_amount} ⭐)")
+
         @tg_bot.message_handler(commands=['start'])
         def on_start(msg):
             webapp_url = os.environ.get("WEBAPP_URL", "https://shopik234.vercel.app")
-            
             try:
                 tg_bot.set_chat_menu_button(
                     msg.chat.id,
@@ -440,6 +746,17 @@ def run_bot_listener():
                 except Exception as e:
                     tg_bot.reply_to(msg, f"❌ Ошибка отправки: {e}")
 
+        @tg_bot.callback_query_handler(func=lambda call: call.data.startswith("paid_"))
+        def on_paid(call):
+            order_id = call.data.replace("paid_", "")
+            notify_order_paid(order_id, "Подтверждено админом вручную")
+            tg_bot.answer_callback_query(call.id, "Заказ отмечен как оплаченный")
+            tg_bot.edit_message_text(
+                call.message.text + "\n\n<b>💰 Статус: ОПЛАЧЕН</b>",
+                chat_id=call.message.chat.id,
+                message_id=call.message.message_id
+            )
+
         @tg_bot.callback_query_handler(func=lambda call: call.data.startswith("done_"))
         def on_done(call):
             tg_bot.answer_callback_query(call.id, "Заказ отмечен как выполнен")
@@ -453,6 +770,10 @@ def run_bot_listener():
         tg_bot.infinity_polling()
     except Exception as e:
         logger.error(f"ошибка поллинга бота: {e}")
+
+# подключаем роутер
+app.include_router(router)
+app.include_router(router, prefix="/api")
 
 # запускаем поллинг только если не на верселе
 if not (os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME")):

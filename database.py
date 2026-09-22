@@ -131,6 +131,20 @@ def init_db():
         );
         """)
 
+        # добавляем новые поля если их нет
+        try:
+            cur.execute("ALTER TABLE orders ADD COLUMN payment_method TEXT DEFAULT '';")
+        except Exception:
+            pass
+        try:
+            cur.execute("ALTER TABLE orders ADD COLUMN payment_id TEXT DEFAULT '';")
+        except Exception:
+            pass
+        try:
+            cur.execute("ALTER TABLE orders ADD COLUMN payment_url TEXT DEFAULT '';")
+        except Exception:
+            pass
+
     # создаем корневую категорию если пусто
     cur.execute("SELECT COUNT(*) as cnt FROM categories;")
     res = cur.fetchone()
@@ -334,7 +348,72 @@ def create_secure_order(buyer_id: Optional[int], buyer_name: str, buyer_username
 
     return order_data, verified_items
 
+def get_order(order_code: str) -> Optional[Dict[str, Any]]:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(placeholder("""
+    SELECT id, order_code as "orderCode", buyer_id as "buyerId", buyer_name as "buyerName", 
+           buyer_username as "buyerUsername", total_rub as "totalRub", total_count as "totalCount", 
+           status, payment_method as "paymentMethod", payment_id as "paymentId", payment_url as "paymentUrl", 
+           created_at as "createdAt"
+    FROM orders WHERE order_code = ?;
+    """), (order_code,))
+    row = cur.fetchone()
+    if not row:
+        conn.close()
+        return None
+    order_data = dict(row)
+    
+    cur.execute(placeholder("""
+    SELECT product_id as "productId", product_name as "name", price, qty, subtotal
+    FROM order_items WHERE order_id = ?;
+    """), (order_data["id"],))
+    order_data["items"] = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    return order_data
+
+def update_order_payment(order_code: str, payment_method: str, payment_id: str = "", payment_url: str = "", status: str = "pending") -> bool:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(placeholder("""
+    UPDATE orders 
+    SET payment_method = ?, payment_id = ?, payment_url = ?, status = ?
+    WHERE order_code = ?;
+    """), (payment_method, payment_id, payment_url, status, order_code))
+    if not IS_POSTGRES:
+        conn.commit()
+    conn.close()
+    return True
+
+def mark_order_paid(order_code: str, payment_id: Optional[str] = None) -> bool:
+    conn = get_connection()
+    cur = conn.cursor()
+    if payment_id:
+        cur.execute(placeholder("""
+        UPDATE orders SET status = 'paid', payment_id = ? WHERE order_code = ?;
+        """), (payment_id, order_code))
+    else:
+        cur.execute(placeholder("""
+        UPDATE orders SET status = 'paid' WHERE order_code = ?;
+        """), (order_code,))
+    if not IS_POSTGRES:
+        conn.commit()
+    conn.close()
+    return True
+
 # сохранение и чтение настроек
+def get_all_settings() -> Dict[str, str]:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT key, value FROM settings;")
+    rows = cur.fetchall()
+    conn.close()
+    res = {}
+    for r in rows:
+        d = dict(r)
+        res[d["key"]] = d["value"]
+    return res
+
 def get_setting(key: str, default: str = "") -> str:
     conn = get_connection()
     cur = conn.cursor()
